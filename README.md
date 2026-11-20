@@ -18,6 +18,12 @@ continuous-to-discrete step succeed or fail compared with AR and diffusion LMs?
 * **Test:** the first 16 tokens of 300 held-out openings are the prompt. Each system writes 48 new tokens, and an
   independent model (TinyStories-33M) scores them.
 
+**How it works, on a toy problem first:** noise (left) follows the learned velocity along nearly straight paths
+and lands on 8 data blobs after 32 Euler steps. With a single step every point lands on the *average* of the blobs,
+the empty centre. The same averaging comes back with text.
+
+![Toy 2D flow](results/figures/fig0_toy2d.png)
+
 **Short answer: no. At this size and budget, the flow LM writes word salad, though it writes it fast.**
 * **Text quality:** scorer perplexity is **117,771**, against **313** for MDLM-5.3M and **22.7** for AR-5.3M. A
   blind AI review gave all 20 flow samples coherence 0/2. AR-5.3M got 1.05 and MDLM-5.3M got 1.00.
@@ -52,6 +58,57 @@ continuous-to-discrete step succeed or fail compared with AR and diffusion LMs?
 
 Flow and the 5.3M baselines use 3 seeds. Paired NLL differences: flow − MDLM-5.3M is **+5.93** [+5.86, +6.00]
 nats/token. Flow − random words is −0.28 [−0.37, −0.18].
+
+**Example** (same prompt for every system; prompt in italics):
+
+> *Lily and Tom are playing in the park. They see a big pile of waste*
+> * **real:** near the bin. It is dirty and smelly. Lily and Tom do not like it. "Who put this waste here?" Lily asks.
+> * **AR-5.3M:** . They ask Mom and Dad if they don't have enough for dinner. Mom and Dad are not sad. …
+> * **MDLM-5.3M:** . The leaves and the sun was with a leaves sticks. The fish were blue fish and laughed and laughed, …
+> * **flow:** . yellow. different things It round Mae Nick the Phil mom dinosaur to. of not lo blinking swam the …
+
+## Why it fails: words without order
+
+Real text and both baselines almost always put tokens next to each other in pairs that occur in real stories. The
+flow model does this only as often as random words do:
+
+![Local syntax](results/figures/fig8_errors.png)
+
+**The noise decides, and it decides early.** Left: along the sampling path, most tokens are already fixed within the
+first fifth of the time. Right: with the same starting noise, 74% of the generated tokens stay the same whether the
+real prompt, no prompt or another prompt is given; with new noise only 2% stay the same.
+
+![Decision time and prompt influence](results/figures/fig7_inside.png)
+
+**What the model knows at each moment.** If a real text is hidden behind the noise, the model's guess of it decodes
+to the right token 30% of the time at t = 0.1 and 80% at t = 0.2. Between t = 0.2 and 0.4 the guess is even worse than
+simply rescaling the noisy input. So tokens get fixed while the model is still unsure which sentence it is writing.
+
+![Decodability over time](results/figures/fig2_decodability.png)
+
+## Steps, solvers and speed
+
+More ODE steps help slowly. Every flow setting stays far above MDLM and AR, and between shuffled real words and random
+words:
+
+![Quality vs steps](results/figures/fig3_steps.png)
+
+Speed is not the problem. A flow step costs 2.1 ms and an MDLM step 4.5 ms, because the flow model outputs 384 numbers
+per position instead of scores for 8,192 words:
+
+![Speed](results/figures/fig5_speed.png)
+
+## Training and ablations
+
+The flow loss keeps falling for the whole run (left). The 2,000-step references write text that is just as good as
+the 6,000-step main model, so a lower loss did not buy better text.
+
+![Training curves](results/figures/fig1_training.png)
+
+Each ablation changes one ingredient and trains for 2,000 steps. Pink means it counts by the pre-registered rule: its
+interval excludes 0 and it lies outside the two reference seeds.
+
+![Ablations](results/figures/fig6_ablations.png)
 
 ## What the experiments showed
 
