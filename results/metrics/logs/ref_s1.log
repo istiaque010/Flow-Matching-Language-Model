@@ -1,0 +1,5 @@
+[ref_s1] params 5,178,752  space p1small d=384  L=64  steps 2000  batch 128  lr 0.006  time adaln  aux_ce 0.0  t_power 1.0
+[ref_s1] step 500/2000 loss 0.8358 val mse 0.8508 prompt 0.8872 acc@.1 0.268 acc@.3 0.854 25096 tok/s
+[ref_s1] step 1000/2000 loss 0.7089 val mse 0.7632 prompt 0.7937 acc@.1 0.281 acc@.3 0.886 25139 tok/s
+[ref_s1] step 1500/2000 loss 0.7031 val mse 0.7156 prompt 0.7435 acc@.1 0.289 acc@.3 0.889 25247 tok/s
+[ref_s1] step 2000/2000 loss 0.7125 val mse 0.6965 prompt 0.7231 acc@.1 0.292 acc@.3 0.900 24918 tok/s

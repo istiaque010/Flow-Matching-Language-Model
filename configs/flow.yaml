@@ -1,0 +1,24 @@
+# Flow-matching velocity Transformer: the guide's starter size (4 blocks, 4 heads), width 256, on Project 1's frozen
+# 384-d embeddings. Token budget matched to the two 5.3M comparison models (Project 2 AR student and Project 3
+# mdlm_small: 49M tokens each): 6,000 steps x 128 sequences x 64 tokens = 49.2M tokens.
+model:
+  seq_len: 64
+  n_layer: 4
+  n_head: 4
+  width: 256
+  dropout: 0.0          # one pass over less than half of the 1.77M training openings: no repetition to regularise
+  time_cond: adaln
+train:
+  space: p1small        # frozen standardised Project 1 embeddings (384-d); "pca128" for the dimension ablation
+  steps: 6000
+  batch_size: 128
+  lr: 6.0e-3            # chosen by the learning-rate pilot (results/metrics/lr_pilot.json), see INSTRUCTIONS Phase 7
+  min_lr_ratio: 0.1
+  warmup: 300
+  weight_decay: 0.01
+  betas: [0.9, 0.99]
+  grad_clip: 1.0
+  p_prompt: 0.5         # share of training sequences with a clean prompt prefix (Phase 11)
+  aux_ce: 0.0           # auxiliary token cross-entropy weight (ablation only)
+  t_power: 1.0          # t = u^power; 1 = uniform (main), 2 = early-time emphasis (ablation)
+  evals: 12

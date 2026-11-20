@@ -1,0 +1,45 @@
+Loading weights:   0%|          | 0/56 [00:00<?, ?it/s]Loading weights: 100%|██████████| 56/56 [00:00<?, ?it/s]
+[transformers] [1mGPTNeoForCausalLM LOAD REPORT[0m from: D:\TTI\Projrcts List\project4\checkpoints\scorer_tinystories33m
+Key                                                   | Status     |  | 
+------------------------------------------------------+------------+--+-
+transformer.h.{0, 1, 2, 3}.attn.attention.bias        | UNEXPECTED |  | 
+transformer.h.{0, 1, 2, 3}.attn.attention.masked_bias | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+                         test_real  ppl     3.78  d2 0.554  rep4 0.001 unk 0.014  eos 0.00  nfe 0
+                test_real_shuffled  ppl 60755.48  d2 0.774  rep4 0.000 unk 0.031  eos 0.00  nfe 0
+                      test_unigram  ppl 155006.80  d2 0.818  rep4 0.000 unk 0.039  eos 0.00  nfe 0
+          test_flow_euler8_nearest  ppl 166705.30  d2 0.761  rep4 0.000 unk 0.018  eos 0.00  nfe 8
+       test_flow_euler8_projection  ppl 542875.53  d2 0.845  rep4 0.000 unk 0.332  eos 0.00  nfe 8
+         test_flow_euler16_nearest  ppl 139417.42  d2 0.761  rep4 0.000 unk 0.019  eos 0.00  nfe 16
+      test_flow_euler16_projection  ppl 449081.77  d2 0.805  rep4 0.000 unk 0.290  eos 0.00  nfe 16
+         test_flow_euler32_nearest  ppl 126768.54  d2 0.752  rep4 0.000 unk 0.020  eos 0.00  nfe 32
+      test_flow_euler32_projection  ppl 380869.80  d2 0.782  rep4 0.000 unk 0.262  eos 0.00  nfe 32
+         test_flow_euler64_nearest  ppl 121000.20  d2 0.746  rep4 0.000 unk 0.020  eos 0.00  nfe 64
+      test_flow_euler64_projection  ppl 356374.90  d2 0.772  rep4 0.000 unk 0.248  eos 0.00  nfe 64
+           test_flow_heun4_nearest  ppl 280246.09  d2 0.859  rep4 0.000 unk 0.021  eos 0.00  nfe 8
+        test_flow_heun4_projection  ppl 948770.95  d2 0.929  rep4 0.000 unk 0.427  eos 0.00  nfe 8
+           test_flow_heun8_nearest  ppl 132616.58  d2 0.772  rep4 0.000 unk 0.022  eos 0.00  nfe 16
+        test_flow_heun8_projection  ppl 402105.46  d2 0.803  rep4 0.000 unk 0.266  eos 0.00  nfe 16
+          test_flow_heun16_nearest  ppl 119490.25  d2 0.751  rep4 0.000 unk 0.020  eos 0.00  nfe 32
+       test_flow_heun16_projection  ppl 353474.79  d2 0.774  rep4 0.000 unk 0.245  eos 0.00  nfe 32
+          test_flow_heun32_nearest  ppl 115067.98  d2 0.746  rep4 0.000 unk 0.021  eos 0.00  nfe 64
+       test_flow_heun32_projection  ppl 340558.73  d2 0.764  rep4 0.000 unk 0.241  eos 0.00  nfe 64
+                 test_flow_main_s1  ppl 117173.72  d2 0.752  rep4 0.000 unk 0.022  eos 0.00  nfe 64
+                 test_flow_main_s2  ppl 121145.74  d2 0.751  rep4 0.000 unk 0.024  eos 0.00  nfe 64
+                uncond_flow_euler8  ppl 76616.42  d2 0.683  rep4 0.000 unk 0.015  eos 0.00  nfe 8
+               uncond_flow_euler32  ppl 57151.86  d2 0.689  rep4 0.000 unk 0.017  eos 0.00  nfe 32
+                uncond_flow_heun32  ppl 51984.95  d2 0.683  rep4 0.000 unk 0.017  eos 0.00  nfe 64
+              test_ar5_topp0.95_s0  ppl    23.59  d2 0.525  rep4 0.001 unk 0.014  eos 0.01  nfe 48
+              test_ar5_topp0.95_s1  ppl    22.55  d2 0.527  rep4 0.002 unk 0.013  eos 0.00  nfe 48
+              test_ar5_topp0.95_s2  ppl    21.88  d2 0.516  rep4 0.001 unk 0.013  eos 0.00  nfe 48
+               uncond_ar5_topp0.95  ppl    13.36  d2 0.389  rep4 0.001 unk 0.012  eos 0.00  nfe 64
+               test_ar5_temp1.0_s0  ppl    41.59  d2 0.574  rep4 0.001 unk 0.018  eos 0.01  nfe 48
+               uncond_ar5_topp0.95  ppl    13.36  d2 0.389  rep4 0.001 unk 0.012  eos 0.00  nfe 64
+           test_mdlm5_small-S32_s0  ppl   314.32  d2 0.458  rep4 0.001 unk 0.008  eos 0.00  nfe 32
+           test_mdlm5_small-S32_s1  ppl   319.17  d2 0.459  rep4 0.001 unk 0.011  eos 0.01  nfe 32
+           test_mdlm5_small-S32_s2  ppl   306.90  d2 0.457  rep4 0.001 unk 0.008  eos 0.01  nfe 32
+            test_mdlm5_small-S8_s0  ppl   543.39  d2 0.479  rep4 0.000 unk 0.011  eos 0.01  nfe 8
+             test_ar13_topp0.95_s0  ppl     7.24  d2 0.505  rep4 0.002 unk 0.013  eos 0.00  nfe 48
+           test_mdlm13_rand-S32_s0  ppl    44.64  d2 0.473  rep4 0.002 unk 0.010  eos 0.00  nfe 32

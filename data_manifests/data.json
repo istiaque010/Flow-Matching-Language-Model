@@ -1,0 +1,48 @@
+{
+ "source": "D:\\TTI\\Projrcts List\\project1\\data\\full",
+ "length": 64,
+ "splits": {
+  "train": {
+   "n": 1772187,
+   "full_window_share": 0.999753976301598,
+   "valid_tokens": 113418108
+  },
+  "val": {
+   "n": 2000,
+   "full_window_share": 1.0,
+   "stories_in_split": 10995
+  },
+  "dev": {
+   "n": 100,
+   "rule": "next stories (random order) with more than 64 tokens"
+  },
+  "test": {
+   "n": 2000,
+   "full_window_share": 1.0,
+   "stories_in_split": 10995
+  },
+  "test_prompt": {
+   "n": 300,
+   "rule": "next stories (random order) with more than 64 tokens"
+  }
+ },
+ "sha256": {
+  "project1/data/full/train.bin": "0b2f3125fb3b46746f6670c425026cd8df6b92c14c83b05b31d3de7b4581bfce",
+  "project1/data/full/val.bin": "2ec1c129580a2b2d73342f59d7bb1c7b047571b7505ba00177e0a29b2d510d7d",
+  "project1/data/full/test.bin": "3292de888ce6498d1723aa2d5a4123aad2b9a241542b87e6149f60a193c38b1b"
+ },
+ "identical_64token_openings_across_splits": {
+  "val-dev": 0,
+  "val-test": 0,
+  "val-test_prompt": 0,
+  "dev-test": 0,
+  "dev-test_prompt": 0,
+  "test-test_prompt": 0,
+  "train-val": 0,
+  "train-dev": 0,
+  "train-test": 1,
+  "train-test_prompt": 0
+ },
+ "note": "identical openings across splits are possible because many TinyStories start the same way; they are counted, not removed (the stories themselves are different)",
+ "train_valid_length_share_lt64": 0.00020201028446772265
+}

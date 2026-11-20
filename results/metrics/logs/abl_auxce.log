@@ -1,0 +1,5 @@
+[abl_auxce] params 5,178,752  space p1small d=384  L=64  steps 2000  batch 128  lr 0.006  time adaln  aux_ce 0.05  t_power 1.0
+[abl_auxce] step 500/2000 loss 1.1932 val mse 0.9661 prompt 0.9976 acc@.1 0.272 acc@.3 0.949 10480 tok/s
+[abl_auxce] step 1000/2000 loss 0.9480 val mse 0.8729 prompt 0.9032 acc@.1 0.277 acc@.3 0.960 10588 tok/s
+[abl_auxce] step 1500/2000 loss 1.0785 val mse 0.8202 prompt 0.8511 acc@.1 0.289 acc@.3 0.964 10751 tok/s
+[abl_auxce] step 2000/2000 loss 0.9141 val mse 0.7963 prompt 0.8265 acc@.1 0.301 acc@.3 0.966 10851 tok/s

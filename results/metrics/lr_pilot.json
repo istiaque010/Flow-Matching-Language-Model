@@ -1,0 +1,26 @@
+{
+ "rule": "lowest unconditional validation MSE after 1,500 steps (seed 100); grid extended upward while the best was at the edge",
+ "grid": {
+  "3e-4": {
+   "best_val_mse": 0.9488710537552834,
+   "final_val_mse": 0.9488710537552834
+  },
+  "1e-3": {
+   "best_val_mse": 0.8184387907385826,
+   "final_val_mse": 0.8184387907385826
+  },
+  "3e-3": {
+   "best_val_mse": 0.7444181889295578,
+   "final_val_mse": 0.7444181889295578
+  },
+  "6e-3": {
+   "best_val_mse": 0.7334732636809349,
+   "final_val_mse": 0.7334732636809349
+  },
+  "1.2e-2": {
+   "best_val_mse": 1.70367893576622,
+   "final_val_mse": 1.70367893576622
+  }
+ },
+ "chosen": "6e-3"
+}

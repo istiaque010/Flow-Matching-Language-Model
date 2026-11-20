@@ -1,0 +1,51 @@
+{
+ "run": "abl_notime",
+ "seed": 0,
+ "model": {
+  "d_data": 384,
+  "seq_len": 64,
+  "n_layer": 4,
+  "n_head": 4,
+  "width": 256,
+  "dropout": 0.0,
+  "time_cond": "none",
+  "time_freqs": 64
+ },
+ "train": {
+  "space": "p1small",
+  "steps": 2000,
+  "batch_size": 128,
+  "lr": 0.006,
+  "min_lr_ratio": 0.1,
+  "warmup": 300,
+  "weight_decay": 0.01,
+  "betas": [
+   0.9,
+   0.99
+  ],
+  "grad_clip": 1.0,
+  "p_prompt": 0.5,
+  "aux_ce": 0.0,
+  "t_power": 1.0,
+  "evals": 4
+ },
+ "params": {
+  "total": 5178752,
+  "trainable": 5178752
+ },
+ "train_seconds": 648.1929632999236,
+ "tokens": 16384000,
+ "tokens_per_s": 25276.423731275536,
+ "peak_rss_mb": 1666.8671875,
+ "best_step": 2000,
+ "best_val_mse": 0.754478245973587,
+ "final_val": {
+  "mse_uncond": 0.754478245973587,
+  "mse_prompt16": 0.787905290722847,
+  "acc_t0.05": 0.11040625162422657,
+  "acc_t0.1": 0.28480468690395355,
+  "acc_t0.2": 0.7187343835830688,
+  "acc_t0.3": 0.8918515592813492
+ },
+ "overfit_batches": 0
+}

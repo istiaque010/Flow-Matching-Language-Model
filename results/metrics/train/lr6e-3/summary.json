@@ -1,0 +1,50 @@
+{
+ "run": "lr6e-3",
+ "seed": 100,
+ "model": {
+  "d_data": 384,
+  "seq_len": 64,
+  "n_layer": 4,
+  "n_head": 4,
+  "width": 256,
+  "dropout": 0.0,
+  "time_cond": "adaln",
+  "time_freqs": 64
+ },
+ "train": {
+  "space": "p1small",
+  "steps": 1500,
+  "batch_size": 128,
+  "lr": 0.006,
+  "min_lr_ratio": 0.1,
+  "warmup": 300,
+  "weight_decay": 0.01,
+  "betas": [
+   0.9,
+   0.99
+  ],
+  "grad_clip": 1.0,
+  "p_prompt": 0.5,
+  "aux_ce": 0.0,
+  "evals": 3
+ },
+ "params": {
+  "total": 5178752,
+  "trainable": 5178752
+ },
+ "train_seconds": 490.566454899963,
+ "tokens": 12288000,
+ "tokens_per_s": 25048.59408396725,
+ "peak_rss_mb": 1743.78125,
+ "best_step": 1500,
+ "best_val_mse": 0.7334732636809349,
+ "final_val": {
+  "mse_uncond": 0.7334732636809349,
+  "mse_prompt16": 0.7650905847549438,
+  "acc_t0.05": 0.10864843800663948,
+  "acc_t0.1": 0.2920781224966049,
+  "acc_t0.2": 0.736273430287838,
+  "acc_t0.3": 0.8850468695163727
+ },
+ "overfit_batches": 0
+}

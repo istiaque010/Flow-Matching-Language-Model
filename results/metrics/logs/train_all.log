@@ -1,0 +1,9 @@
+main done 10:33 [main] step 6000/6000 loss 0.6398 val mse 0.6434 prompt 0.6659 acc@.1 0.305 acc@.3 0.920 25295 tok/s
+ref_s0 done 10:44 [ref_s0] step 2000/2000 loss 0.6636 val mse 0.6959 prompt 0.7226 acc@.1 0.290 acc@.3 0.898 25353 tok/s
+ref_s1 done 10:55 [ref_s1] step 2000/2000 loss 0.7125 val mse 0.6965 prompt 0.7231 acc@.1 0.292 acc@.3 0.900 24918 tok/s
+abl_notime done 11:06 [abl_notime] step 2000/2000 loss 0.7309 val mse 0.7545 prompt 0.7879 acc@.1 0.285 acc@.3 0.892 25276 tok/s
+abl_auxce done 11:31 [abl_auxce] step 2000/2000 loss 0.9141 val mse 0.7963 prompt 0.8265 acc@.1 0.301 acc@.3 0.966 10851 tok/s
+abl_pca128 done 11:41 [abl_pca128] step 2000/2000 loss 0.2653 val mse 0.3566 prompt 0.3863 acc@.1 0.156 acc@.3 0.781 27678 tok/s
+abl_tpow2 done 11:52 [abl_tpow2] step 2000/2000 loss 0.8434 val mse 0.6890 prompt 0.7188 acc@.1 0.314 acc@.3 0.895 25440 tok/s
+abl_len32 done 12:02 [abl_len32] step 2000/2000 loss 0.6265 val mse 0.6623 prompt 0.7083 acc@.1 0.407 acc@.3 0.910 26216 tok/s
+all training done 12:02

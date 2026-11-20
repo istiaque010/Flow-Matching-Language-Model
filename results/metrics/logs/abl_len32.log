@@ -1,0 +1,5 @@
+[abl_len32] params 5,170,560  space p1small d=384  L=32  steps 2000  batch 256  lr 0.006  time adaln  aux_ce 0.0  t_power 1.0
+[abl_len32] step 500/2000 loss 0.8035 val mse 0.8015 prompt 0.8558 acc@.1 0.357 acc@.3 0.879 26977 tok/s
+[abl_len32] step 1000/2000 loss 0.7082 val mse 0.7232 prompt 0.7729 acc@.1 0.386 acc@.3 0.899 27123 tok/s
+[abl_len32] step 1500/2000 loss 0.6830 val mse 0.6789 prompt 0.7253 acc@.1 0.399 acc@.3 0.907 26372 tok/s
+[abl_len32] step 2000/2000 loss 0.6265 val mse 0.6623 prompt 0.7083 acc@.1 0.407 acc@.3 0.910 26216 tok/s

@@ -1,0 +1,51 @@
+{
+ "run": "abl_pca128",
+ "seed": 0,
+ "model": {
+  "d_data": 128,
+  "seq_len": 64,
+  "n_layer": 4,
+  "n_head": 4,
+  "width": 256,
+  "dropout": 0.0,
+  "time_cond": "adaln",
+  "time_freqs": 64
+ },
+ "train": {
+  "space": "pca128",
+  "steps": 2000,
+  "batch_size": 128,
+  "lr": 0.006,
+  "min_lr_ratio": 0.1,
+  "warmup": 300,
+  "weight_decay": 0.01,
+  "betas": [
+   0.9,
+   0.99
+  ],
+  "grad_clip": 1.0,
+  "p_prompt": 0.5,
+  "aux_ce": 0.0,
+  "t_power": 1.0,
+  "evals": 4
+ },
+ "params": {
+  "total": 5047424,
+  "trainable": 5047424
+ },
+ "train_seconds": 591.9569183000131,
+ "tokens": 16384000,
+ "tokens_per_s": 27677.68986812708,
+ "peak_rss_mb": 1652.015625,
+ "best_step": 2000,
+ "best_val_mse": 0.35660986974835396,
+ "final_val": {
+  "mse_uncond": 0.35660986974835396,
+  "mse_prompt16": 0.38625364750623703,
+  "acc_t0.05": 0.08085156325250864,
+  "acc_t0.1": 0.15557030960917473,
+  "acc_t0.2": 0.48722656071186066,
+  "acc_t0.3": 0.7813359424471855
+ },
+ "overfit_batches": 0
+}

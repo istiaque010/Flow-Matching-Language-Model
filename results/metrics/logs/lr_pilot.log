@@ -1,0 +1,3 @@
+[lr3e-4] step 1500/1500 loss 0.9881 val mse 0.9489 prompt 0.9903 acc@.1 0.251 acc@.3 0.833 25793 tok/s
+[lr1e-3] step 1500/1500 loss 0.8618 val mse 0.8184 prompt 0.8571 acc@.1 0.280 acc@.3 0.858 25685 tok/s
+[lr3e-3] step 1500/1500 loss 0.7918 val mse 0.7444 prompt 0.7778 acc@.1 0.291 acc@.3 0.880 26386 tok/s

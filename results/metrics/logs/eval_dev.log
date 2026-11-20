@@ -1,0 +1,26 @@
+Loading weights:   0%|          | 0/56 [00:00<?, ?it/s]Loading weights: 100%|██████████| 56/56 [00:00<00:00, 56070.91it/s]
+[transformers] [1mGPTNeoForCausalLM LOAD REPORT[0m from: D:\TTI\Projrcts List\project4\checkpoints\scorer_tinystories33m
+Key                                                   | Status     |  | 
+------------------------------------------------------+------------+--+-
+transformer.h.{0, 1, 2, 3}.attn.attention.bias        | UNEXPECTED |  | 
+transformer.h.{0, 1, 2, 3}.attn.attention.masked_bias | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+           dev_flow_euler8_nearest  ppl 153769.22  d2 0.862  rep4 0.000 unk 0.019  eos 0.00  nfe 8
+        dev_flow_euler8_projection  ppl 521884.41  d2 0.908  rep4 0.000 unk 0.328  eos 0.00  nfe 8
+          dev_flow_euler16_nearest  ppl 134872.08  d2 0.855  rep4 0.000 unk 0.020  eos 0.00  nfe 16
+       dev_flow_euler16_projection  ppl 423270.33  d2 0.880  rep4 0.000 unk 0.290  eos 0.00  nfe 16
+          dev_flow_euler32_nearest  ppl 115822.78  d2 0.846  rep4 0.000 unk 0.021  eos 0.00  nfe 32
+       dev_flow_euler32_projection  ppl 397810.15  d2 0.868  rep4 0.000 unk 0.267  eos 0.00  nfe 32
+          dev_flow_euler64_nearest  ppl 111113.55  d2 0.838  rep4 0.000 unk 0.021  eos 0.00  nfe 64
+       dev_flow_euler64_projection  ppl 381344.28  d2 0.862  rep4 0.000 unk 0.252  eos 0.00  nfe 64
+            dev_flow_heun4_nearest  ppl 272991.74  d2 0.923  rep4 0.000 unk 0.020  eos 0.00  nfe 8
+         dev_flow_heun4_projection  ppl 996178.81  d2 0.969  rep4 0.000 unk 0.422  eos 0.00  nfe 8
+            dev_flow_heun8_nearest  ppl 118147.91  d2 0.865  rep4 0.000 unk 0.022  eos 0.00  nfe 16
+         dev_flow_heun8_projection  ppl 411492.46  d2 0.884  rep4 0.000 unk 0.263  eos 0.00  nfe 16
+           dev_flow_heun16_nearest  ppl 110522.80  d2 0.840  rep4 0.000 unk 0.021  eos 0.00  nfe 32
+        dev_flow_heun16_projection  ppl 363362.87  d2 0.859  rep4 0.000 unk 0.249  eos 0.00  nfe 32
+           dev_flow_heun32_nearest  ppl 104900.63  d2 0.829  rep4 0.000 unk 0.021  eos 0.00  nfe 64
+        dev_flow_heun32_projection  ppl 344225.08  d2 0.850  rep4 0.000 unk 0.242  eos 0.00  nfe 64
+chosen {'solver': 'heun', 'steps': 32, 'decoder': 'nearest', 'rule': 'lowest dev scorer perplexity, ties -> fewer NFE', 'dev_ppl': 104900.62930907945}

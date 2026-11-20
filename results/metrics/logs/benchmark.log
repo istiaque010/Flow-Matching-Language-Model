@@ -1,0 +1,11 @@
+           flow euler8 median    17.8 ms  p95    20.1 ms  batch64    7605 tok/s  mem +   305 MB  NFE 8
+          flow euler16 median    33.4 ms  p95    37.6 ms  batch64    3964 tok/s  mem +   294 MB  NFE 16
+          flow euler32 median    67.7 ms  p95    77.6 ms  batch64    2080 tok/s  mem +   287 MB  NFE 32
+          flow euler64 median   134.2 ms  p95   156.0 ms  batch64    1121 tok/s  mem +   285 MB  NFE 64
+           flow heun16 median    67.9 ms  p95    87.3 ms  batch64    2200 tok/s  mem +   325 MB  NFE 32
+           flow heun32 median   133.2 ms  p95   172.6 ms  batch64    1049 tok/s  mem +   318 MB  NFE 64
+          ar5 topp0.95 median    96.3 ms  p95   107.4 ms  batch64    4965 tok/s  mem +    96 MB  NFE 48
+         ar13 topp0.95 median   142.6 ms  p95   155.9 ms  batch64    3588 tok/s  mem +   186 MB  NFE 48
+       mdlm5 small-S32 median   142.6 ms  p95   153.6 ms  batch64     490 tok/s  mem +   692 MB  NFE 32
+        mdlm5 small-S8 median    35.2 ms  p95    41.0 ms  batch64    1784 tok/s  mem +   650 MB  NFE 8
+       mdlm13 rand-S32 median   146.5 ms  p95   215.7 ms  batch64     432 tok/s  mem +   609 MB  NFE 32

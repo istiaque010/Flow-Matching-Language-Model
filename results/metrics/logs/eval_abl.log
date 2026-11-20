@@ -1,0 +1,18 @@
+Loading weights:   0%|          | 0/56 [00:00<?, ?it/s]Loading weights: 100%|██████████| 56/56 [00:00<00:00, 55937.37it/s]
+[transformers] [1mGPTNeoForCausalLM LOAD REPORT[0m from: D:\TTI\Projrcts List\project4\checkpoints\scorer_tinystories33m
+Key                                                   | Status     |  | 
+------------------------------------------------------+------------+--+-
+transformer.h.{0, 1, 2, 3}.attn.attention.bias        | UNEXPECTED |  | 
+transformer.h.{0, 1, 2, 3}.attn.attention.masked_bias | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+                   abl_ref_s0_test  ppl 112012.43  d2 0.765  rep4 0.000 unk 0.022  eos 0.00  nfe 64
+                  abl_ref_s0_p8c24  ppl 137824.07  d2 0.830  rep4 0.000 unk 0.023  eos 0.00  nfe 64
+                   abl_ref_s1_test  ppl 126154.17  d2 0.753  rep4 0.000 unk 0.019  eos 0.00  nfe 64
+                  abl_ref_s1_p8c24  ppl 151561.42  d2 0.827  rep4 0.000 unk 0.020  eos 0.00  nfe 64
+               abl_abl_notime_test  ppl 105057.50  d2 0.729  rep4 0.000 unk 0.018  eos 0.00  nfe 64
+                abl_abl_auxce_test  ppl 178489.34  d2 0.837  rep4 0.000 unk 0.023  eos 0.00  nfe 64
+               abl_abl_pca128_test  ppl 95194.50  d2 0.784  rep4 0.000 unk 0.017  eos 0.00  nfe 64
+                abl_abl_tpow2_test  ppl 113902.84  d2 0.723  rep4 0.000 unk 0.021  eos 0.00  nfe 64
+               abl_abl_len32_p8c24  ppl 95285.42  d2 0.765  rep4 0.000 unk 0.011  eos 0.00  nfe 64

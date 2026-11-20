@@ -1,0 +1,87 @@
+{
+ "emb_ckpt": "D:\\TTI\\Projrcts List\\project1\\checkpoints\\small\\model_best.pt",
+ "emb_sha256": "b4a9986a17bf478ee8223d71d62f6c3fef3a076bf8ebafc2c589b6ca94611361",
+ "raw_std": 0.04969703033566475,
+ "sigma": 0.04066349193453789,
+ "mu_norm": 0.14796681702136993,
+ "pca128_explained_variance": 0.8748356103897095,
+ "spaces": {
+  "p1small": {
+   "dim": 384,
+   "data_mean_abs": 0.04189753159880638,
+   "data_std": 0.9956628680229187,
+   "vocab_roundtrip_nearest": 1.0,
+   "nearest_other_token_dist_median_vocab": 14.976933479309082,
+   "nearest_other_token_dist_median_data_weighted": 19.255836486816406,
+   "clean_val_token_acc": {
+    "nearest": 1.0,
+    "projection": 0.9972422122955322
+   },
+   "vocab_roundtrip_projection": 0.7711181640625,
+   "perturbed_acc": {
+    "0.05": {
+     "nearest": 1.0,
+     "projection": 0.9972812533378601
+    },
+    "0.1": {
+     "nearest": 0.9999843835830688,
+     "projection": 0.9971874952316284
+    },
+    "0.2": {
+     "nearest": 0.9999687671661377,
+     "projection": 0.9970859289169312
+    },
+    "0.3": {
+     "nearest": 0.9999609589576721,
+     "projection": 0.9969609379768372
+    },
+    "0.5": {
+     "nearest": 0.9999531507492065,
+     "projection": 0.9965000152587891
+    },
+    "0.75": {
+     "nearest": 0.9999531507492065,
+     "projection": 0.9949296712875366
+    },
+    "1.0": {
+     "nearest": 0.9999140501022339,
+     "projection": 0.9926562309265137
+    }
+   }
+  },
+  "pca128": {
+   "dim": 128,
+   "data_mean_abs": 0.03014696016907692,
+   "data_std": 1.0032130479812622,
+   "vocab_roundtrip_nearest": 1.0,
+   "nearest_other_token_dist_median_vocab": 5.828191757202148,
+   "nearest_other_token_dist_median_data_weighted": 10.01511287689209,
+   "clean_val_token_acc": {
+    "nearest": 1.0
+   },
+   "perturbed_acc": {
+    "0.05": {
+     "nearest": 0.9999687671661377
+    },
+    "0.1": {
+     "nearest": 0.9999609589576721
+    },
+    "0.2": {
+     "nearest": 0.9999452829360962
+    },
+    "0.3": {
+     "nearest": 0.9999062418937683
+    },
+    "0.5": {
+     "nearest": 0.999875009059906
+    },
+    "0.75": {
+     "nearest": 0.999625027179718
+    },
+    "1.0": {
+     "nearest": 0.9972968697547913
+    }
+   }
+  }
+ }
+}

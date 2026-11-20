@@ -1,0 +1,5 @@
+[abl_pca128] params 5,047,424  space pca128 d=128  L=64  steps 2000  batch 128  lr 0.006  time adaln  aux_ce 0.0  t_power 1.0
+[abl_pca128] step 500/2000 loss 0.4523 val mse 0.4742 prompt 0.5058 acc@.1 0.132 acc@.3 0.739 27577 tok/s
+[abl_pca128] step 1000/2000 loss 0.4849 val mse 0.5139 prompt 0.5427 acc@.1 0.122 acc@.3 0.735 27728 tok/s
+[abl_pca128] step 1500/2000 loss 0.4275 val mse 0.3756 prompt 0.4061 acc@.1 0.151 acc@.3 0.773 27594 tok/s
+[abl_pca128] step 2000/2000 loss 0.2653 val mse 0.3566 prompt 0.3863 acc@.1 0.156 acc@.3 0.781 27678 tok/s

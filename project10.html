@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flow-Matching Language Model</title>
+<meta name="description" content="Project 10 tutorial: a 5.2M-parameter flow-matching language model moves noise to token embeddings with an ODE, compared with AR and masked diffusion models of the same size on a CPU; where the continuous-to-discrete step fails.">
+<style>
+:root {
+  --bg: #f7f6f3; --surface: #ffffff; --surface-2: #f1efea; --text: #1f2328; --muted: #5d6470;
+  --border: #e2ded6; --accent: #2f6fdb; --accent-soft: #e6eefc; --good: #1f8a4c; --good-soft: #e3f4ea;
+  --warn: #b26a00; --warn-soft: #fdf1dc; --bad: #c0392b; --bad-soft: #fbe6e3; --code-bg: #f3f1ec;
+  --grpo: #0072B2; --sft: #C98A00; --base: #7F7F7F; --grid: #e1e0d9; --axis: #c3c2b7;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15171b; --surface: #1d2026; --surface-2: #242830; --text: #e7e9ee; --muted: #a0a7b4;
+    --border: #323742; --accent: #7aa7ff; --accent-soft: #1f2b44; --good: #5cc98a; --good-soft: #17301f;
+    --warn: #f0b45a; --warn-soft: #33281a; --bad: #ff8a7a; --bad-soft: #3a1f1c; --code-bg: #262a32;
+    --grpo: #5aa9e6; --sft: #f0b84a; --base: #9aa0a6; --grid: #2c2f36; --axis: #3e434d;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15171b; --surface: #1d2026; --surface-2: #242830; --text: #e7e9ee; --muted: #a0a7b4;
+  --border: #323742; --accent: #7aa7ff; --accent-soft: #1f2b44; --good: #5cc98a; --good-soft: #17301f;
+  --warn: #f0b45a; --warn-soft: #33281a; --bad: #ff8a7a; --bad-soft: #3a1f1c; --code-bg: #262a32;
+  --grpo: #5aa9e6; --sft: #f0b84a; --base: #9aa0a6; --grid: #2c2f36; --axis: #3e434d;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); }
+code, pre { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.88em; }
+code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { background: var(--code-bg); padding: 12px 14px; border-radius: 8px; overflow-x: auto; line-height: 1.5; }
+pre code { background: none; padding: 0; }
+h1, h2, h3, h4 { line-height: 1.25; }
+.layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 32px; max-width: 1180px;
+  margin: 0 auto; padding: 24px 16px 80px; }
+nav.toc { position: sticky; top: 16px; align-self: start; max-height: calc(100vh - 32px); overflow-y: auto; font-size: 14px; }
+nav.toc h4 { margin: 0 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-size: 12px; }
+nav.toc a { display: block; padding: 4px 10px; border-left: 2px solid var(--border); color: var(--muted); text-decoration: none; }
+nav.toc a:hover, nav.toc a.active { color: var(--accent); border-left-color: var(--accent); }
+nav.toc .group { margin: 14px 0 4px; font-weight: 600; color: var(--text); font-size: 13px; }
+main { min-width: 0; }
+header.hero { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; }
+header.hero h1 { margin: 0 0 8px; font-size: 30px; }
+header.hero p { margin: 6px 0; color: var(--muted); max-width: 72ch; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--good-soft); color: var(--good); }
+section { margin-top: 36px; }
+section > h2 { font-size: 24px; margin: 0 0 12px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-top: 18px; }
+.stat { background: var(--surface-2); border-radius: 10px; padding: 14px; }
+.stat .v { font-size: 26px; font-weight: 700; }
+.stat .l { font-size: 13px; color: var(--muted); }
+.flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
+.flow span.box { background: var(--accent-soft); border-radius: 8px; padding: 6px 10px; font-size: 14px; }
+.flow span.arrow { color: var(--muted); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 10px 0; }
+.tw { overflow-x: auto; }
+th, td { border-bottom: 1px solid var(--border); padding: 7px 9px; text-align: left; vertical-align: top; }
+th { background: var(--surface-2); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr.hl td { background: color-mix(in srgb, var(--grpo) 9%, var(--surface)); font-weight: 600; }
+.phase { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px 24px; margin-top: 22px; }
+.phase-head { display: flex; gap: 14px; align-items: center; }
+.phase-num { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--accent); color: var(--surface); font-weight: 700; font-size: 17px; }
+.phase-head h3 { margin: 0; font-size: 21px; }
+.phase-head .sub { color: var(--muted); font-size: 14px; }
+.part { margin-top: 16px; }
+.part > h4 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.part p { margin: 6px 0; }
+.part ul { margin: 6px 0; padding-left: 22px; }
+.analogy { background: var(--surface-2); border-radius: 10px; padding: 10px 14px; font-size: 15px; }
+.analogy::before { content: "Think of it like this: "; font-weight: 600; }
+.decide { background: var(--good-soft); border-left: 4px solid var(--good); border-radius: 8px; padding: 12px 16px; margin-top: 16px; }
+.decide h4 { margin: 0 0 6px; color: var(--good); font-size: 14px; text-transform: uppercase; letter-spacing: .05em; }
+.decide p, .decide ul { margin: 4px 0; }
+.warn { background: var(--warn-soft); border-left: 4px solid var(--warn); border-radius: 8px; padding: 10px 14px; margin-top: 12px; }
+.warn b { color: var(--warn); }
+.note { background: var(--accent-soft); border-left: 4px solid var(--accent); border-radius: 8px; padding: 10px 14px; margin-top: 12px; }
+.theme-btn { float: right; background: var(--surface-2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 8px; padding: 5px 10px; cursor: pointer; font-size: 13px; }
+.gloss dt { font-weight: 600; margin-top: 10px; }
+.gloss dd { margin: 2px 0 0 0; color: var(--muted); }
+.idea { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px 24px; margin-top: 22px; }
+.idea > h3 { margin: 0 0 4px; font-size: 21px; }
+.idea .lead { color: var(--muted); margin: 0 0 8px; }
+.demo { background: var(--surface-2); border-radius: 12px; padding: 16px; margin-top: 14px; }
+.demo-title { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+.demo-note { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+.btn { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 12px; font: inherit; font-size: 14px; cursor: pointer; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.qbox { font-family: ui-monospace, Consolas, monospace; font-size: 14px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px; }
+.group { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin-top: 10px; }
+.ans { border: 2px solid var(--border); background: var(--surface); border-radius: 10px; padding: 8px 10px; cursor: pointer; font: inherit;
+  color: var(--text); text-align: left; transition: border-color .15s; }
+.ans .t { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
+.ans .r { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.ans .a { font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.ans.ok { border-color: var(--good); }
+.ans.no { border-color: var(--bad); }
+.ans .a.pos { color: var(--good); } .ans .a.neg { color: var(--bad); } .ans .a.zero { color: var(--muted); }
+.facts { display: flex; flex-wrap: wrap; gap: 18px; font-size: 13px; color: var(--muted); margin-top: 10px; }
+.facts b { color: var(--text); }
+.verdict { font-weight: 600; margin-top: 8px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 6px 0; font-size: 13px; color: var(--muted); }
+.legend i { width: 18px; height: 3px; border-radius: 2px; display: inline-block; vertical-align: middle; margin-right: 6px; }
+.legend i.sq { width: 12px; height: 12px; border-radius: 3px; }
+svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+svg.chart text { fill: var(--muted); font-size: 12px; font-family: system-ui, sans-serif; }
+svg.chart .gridl { stroke: var(--grid); stroke-width: 1; }
+#tip { position: fixed; pointer-events: none; background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 10px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.15); opacity: 0; transition: opacity .12s; z-index: 10; max-width: 280px; }
+.yes { color: var(--good); font-weight: 700; } .no { color: var(--bad); font-weight: 700; }
+.ex { font-family: ui-monospace, Consolas, monospace; font-size: 13.5px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px; margin-top: 8px; }
+.ex mark { background: var(--bad-soft); color: var(--bad); border-radius: 3px; padding: 0 2px; }
+.ex .who { font-family: system-ui, sans-serif; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; gap: 16px; }
+  nav.toc { position: static; max-height: none; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  header.hero { padding: 20px; }
+  header.hero h1 { font-size: 24px; }
+  .phase, .idea { padding: 18px 16px; }
+}
+</style>
+<style>
+:root { --flow: #0072B2; --ar: #D55E00; --mdlm: #009E73; --ref: #8a8f98; --real: #1f2328; --proj: #C98A00; --abl: #CC79A7; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --flow: #5aa9e6; --ar: #f08a4b; --mdlm: #3cc79a; --ref: #9aa0a6; --real: #e7e9ee; --proj: #f0b84a; --abl: #e39acb; } }
+:root[data-theme="dark"] { --flow: #5aa9e6; --ar: #f08a4b; --mdlm: #3cc79a; --ref: #9aa0a6; --real: #e7e9ee; --proj: #f0b84a; --abl: #e39acb; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+.seg button { background: var(--surface); color: var(--text); border: 0; border-right: 1px solid var(--border); padding: 6px 12px; font: inherit; font-size: 14px; cursor: pointer; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.story { font-size: 14.5px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-top: 8px; }
+.story .who { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 4px; }
+.story b.p { color: var(--muted); font-weight: 400; }
+.toybox { display: grid; grid-template-columns: minmax(0, 340px) 1fr; gap: 18px; align-items: center; }
+.slots { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.slot { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-family: ui-monospace, Consolas, monospace; font-size: 15px; min-width: 70px; text-align: center; }
+.slot.fixed { color: var(--muted); }
+.slot.bad { border-color: var(--bad); color: var(--bad); }
+.slot.good { border-color: var(--good); color: var(--good); }
+@media (max-width: 860px) { .toybox { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="tip" role="tooltip"></div>
+<div class="layout">
+<nav class="toc" aria-label="Contents">
+  <h4>Contents</h4>
+  <a href="#top">Overview</a>
+  <a href="#ideas">Basic ideas</a>
+  <a href="#toy">Try it: a flow in 2D</a>
+  <a href="#results">Results at a glance</a>
+  <a href="#samples">Read the samples</a>
+  <a href="#why">Why word salad?</a>
+  <a href="#predictions">Predictions vs results</a>
+  <div class="group">The 16 phases</div>
+  <a href="#p1">1–2 Setup, data, baselines</a>
+  <a href="#p3">3 Continuous representation</a>
+  <a href="#p4">4–6 Path, model, loss</a>
+  <a href="#p7">7 Training</a>
+  <a href="#p8">8–9 ODE sampler and decoding</a>
+  <a href="#p10">10 The continuous–discrete gap</a>
+  <a href="#p11">11 Prompts</a>
+  <a href="#p12">12 Solvers and steps</a>
+  <a href="#p13">13 Against AR and diffusion</a>
+  <a href="#p14">14 Ablations and errors</a>
+  <a href="#p15">15–16 Repository and report</a>
+  <a href="#lessons">Lessons</a>
+  <a href="#glossary">Glossary</a>
+</nav>
+<main>
+<header class="hero" id="top">
+  <span class="badge">Project 10 · complete</span>
+  <h1>Flow-Matching Language Model</h1>
+  <p>Instead of writing one word after another, this model writes <b>all 64 positions at once</b>. It starts from
+  random noise and moves every position, step by step, toward the point of a real word. A small Transformer learns
+  which way to move. We compare it with an autoregressive model and a masked diffusion model of the same size, trained
+  on the same number of words. Everything runs on a CPU.</p>
+  <p><b>Question:</b> can a small continuous flow-matching model write coherent text, and where does the step from
+  continuous points back to words succeed or fail?</p>
+  <p style="margin-top:12px"><button class="btn" id="themeBtn" type="button">Switch light / dark</button></p>
+  <div class="stats">
+    <div class="stat"><div class="v">117,771</div><div class="l">scorer perplexity of the flow model (MDLM-5.3M: 313, AR-5.3M: 22.7)</div></div>
+    <div class="stat"><div class="v">0 / 2</div><div class="l">blind coherence of all 20 reviewed flow samples (AI reviewer)</div></div>
+    <div class="stat"><div class="v">74%</div><div class="l">of words stay the same when the prompt is removed: the noise decides</div></div>
+    <div class="stat"><div class="v">68 ms</div><div class="l">per 48-word continuation at 32 steps: faster than AR (96) and MDLM (143)</div></div>
+  </div>
+</header>
+
+<section id="ideas">
+  <h2>Start here: the basic ideas</h2>
+  <div class="card">
+    <p><b>Every token is a point.</b> Project 1 already gave every one of the 8,192 tokens a list of 384 numbers (its
+    <b>embedding</b>). A 64-token text is then a cloud of 64 points in a 384-dimensional space. Turning a point back
+    into a word is easy: take the word whose point is <b>nearest</b>.</p>
+    <p><b>Flow matching</b> teaches a network a <b>velocity</b>: for any half-noisy cloud and a time t between 0 and 1, which way
+    should each point move? Training uses straight lines: pick a noise cloud x0 and a real text x1, take the point
+    <code>x_t = (1 − t)·x0 + t·x1</code> part-way along the line, and ask the network to predict the direction
+    <code>x1 − x0</code>. To write new text, start from fresh noise and follow the predicted arrows from t = 0 to t = 1
+    with an <b>ODE solver</b> (small straight steps).</p>
+    <div class="analogy">64 marbles are thrown randomly onto a huge board where every word has its own hole. The network
+    is a wind that, step by step, blows each marble toward a hole. For a good sentence, the marbles must end in holes that
+    fit together — and the wind decides where each marble goes from where it starts.</div>
+    <div class="flow"><span class="box">noise (64 × 384)</span><span class="arrow">→</span><span class="box">velocity Transformer, 8–64 steps</span><span class="arrow">→</span><span class="box">64 points</span><span class="arrow">→</span><span class="box">nearest word for each</span><span class="arrow">→</span><span class="box">text</span></div>
+    <p>How it differs from earlier projects: <b>AR</b> (Projects 1–2) picks one token at a time from left to right;
+    <b>masked diffusion</b> (Projects 3–6) starts from all-<code>[MASK]</code> and fills in real tokens over several
+    steps. The flow model never picks a token until the very end — everything happens with continuous numbers.</p>
+  </div>
+</section>
+
+<section id="toy">
+  <h2>Try it: a flow in 2D</h2>
+  <div class="card">
+    <p>Before text, the same method on a picture you can see (Phase 1). The data are 8 small blobs on a circle; the
+    grey dots start as random noise. The arrows here are the <i>exact</i> best velocity for this data. Choose the number
+    of steps and press <b>Run</b>.</p>
+    <div class="toybox">
+      <svg class="chart" id="toySvg" viewBox="0 0 340 340" role="img" aria-label="Points flowing from noise to eight blobs"></svg>
+      <div>
+        <div class="controls"><span>steps:</span>
+          <div class="seg" id="toySeg"><button type="button" data-s="1">1</button><button type="button" data-s="2">2</button><button type="button" data-s="4">4</button><button type="button" data-s="8" aria-pressed="true">8</button><button type="button" data-s="32">32</button></div>
+        </div>
+        <div class="controls"><button class="btn" id="toyRun" type="button">Run</button><button class="btn" id="toyReset" type="button">New noise</button></div>
+        <p class="demo-note" id="toyNote">t = 0.00 — all points are noise.</p>
+        <p class="demo-note">Our trained toy model: 1 step → sliced distance 2.44 (all points pile up in the centre), 8 steps → 0.17,
+        32 steps → 0.11 = as close as two real samples are to each other.</p>
+      </div>
+    </div>
+    <div class="warn"><b>Watch 1 step.</b> At t = 0 the best direction is toward the <i>average</i> of all blobs, so one
+    big step lands every point in the empty centre. Text has the same problem, only worse: the "average" of many
+    possible sentences is not a sentence.</div>
+  </div>
+</section>
+
+<section id="results">
+  <h2>Final results at a glance</h2>
+  <div class="card">
+    <p>300 held-out story openings. Every system gets the same first 16 tokens and writes 48 more. An independent model
+    (TinyStories-33M) scores how natural the continuation is: <b>scorer perplexity</b>, lower is better, log scale.
+    Hover for details.</p>
+    <svg class="chart" id="cmpChart" viewBox="0 0 720 330" role="img" aria-label="Scorer perplexity per system, log scale"></svg>
+    <div class="tw"><table>
+      <tr><th>System</th><th class="num">Params</th><th class="num">Scorer ppl</th><th class="num">Coherence (0–2)</th><th class="num">Relevance (0–2)</th><th class="num">Latency</th></tr>
+      <tr><td>real continuation</td><td class="num">—</td><td class="num">4.0</td><td class="num">2.00</td><td class="num">2.00</td><td class="num">—</td></tr>
+      <tr><td>AR-13.9M</td><td class="num">13.9M</td><td class="num">7.2</td><td class="num">—</td><td class="num">—</td><td class="num">143 ms</td></tr>
+      <tr><td>AR-5.3M</td><td class="num">5.3M</td><td class="num">22.7</td><td class="num">1.05</td><td class="num">1.70</td><td class="num">96 ms</td></tr>
+      <tr><td>MDLM-13.9M, 32 steps</td><td class="num">13.9M</td><td class="num">44.6</td><td class="num">—</td><td class="num">—</td><td class="num">146 ms</td></tr>
+      <tr><td>MDLM-5.3M, 32 steps</td><td class="num">5.3M</td><td class="num">313</td><td class="num">1.00</td><td class="num">1.20</td><td class="num">143 ms</td></tr>
+      <tr class="hl"><td>flow 5.2M, Heun 32 steps</td><td class="num">5.2M</td><td class="num">117,771</td><td class="num">0.00</td><td class="num">0.45</td><td class="num">133 ms</td></tr>
+      <tr><td>real words, shuffled</td><td class="num">—</td><td class="num">60,756</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>
+      <tr><td>random frequent words</td><td class="num">—</td><td class="num">155,007</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>
+    </table></div>
+    <p>The flow model, AR-5.3M and MDLM-5.3M have the same size (≈5.2–5.3M parameters) and saw the same 49M training
+    tokens. Coherence and relevance come from a <b>blind review by an AI annotator</b> (a Claude subagent, not a person),
+    20 prompts per system.</p>
+    <div class="note">Two reference rows explain the flow number: <b>real words, shuffled</b> (the right words in a random
+    order) and <b>random frequent words</b> (no context at all). The flow model lands between them: it chooses words that fit
+    the story better than random, but it puts them in no order.</div>
+  </div>
+</section>
+
+<section id="samples">
+  <h2>Read the samples</h2>
+  <div class="card">
+    <p>Pick a test prompt. The grey text is the prompt (the same for everyone); then each system's 48 tokens.
+    The odd <code>œ</code> is a real token: a leftover of badly encoded quote marks that occur in the
+    TinyStories data; the flow model scatters it, and word pieces like "lo" or "Mar", without their partners.</p>
+    <div class="seg" id="sampleSeg"></div>
+    <div id="sampleBox"></div>
+  </div>
+</section>
+
+<section id="why">
+  <h2>Why word salad? The averaging problem</h2>
+  <div class="card">
+    <p>Suppose the right continuation of <i>"Lily went to …"</i> is one of three two-word phrases, equally likely:
+    <b>the park</b>, <b>her room</b>, <b>a shop</b>. Every one is fine. Now compare two ways to choose.</p>
+    <div class="controls"><button class="btn" id="jointBtn" type="button">Choose the whole phrase (like AR / a good joint model)</button>
+      <button class="btn" id="indepBtn" type="button">Choose each position on its own</button></div>
+    <div class="slots"><span class="slot fixed">Lily</span><span class="slot fixed">went</span><span class="slot fixed">to</span><span class="slot" id="w1">?</span><span class="slot" id="w2">?</span></div>
+    <p class="demo-note" id="jointNote">Press a button a few times.</p>
+    <p>Choosing each position on its own gives "the room", "her shop", "a park" two times out of three. A
+    flow model trained with squared error is pushed toward the <b>average</b> of all fitting texts at every position, and
+    the diagnostics (Phase 10) show that it fixes most positions <b>early</b> (75% by t = 0.2), while it still cannot
+    tell which sentence it is writing. Each position then settles into "some story word" largely on its own. With 48
+    positions and thousands of words, that is word salad.</p>
+    <svg class="chart" id="decChart" viewBox="0 0 720 260" role="img" aria-label="Share of tokens already decided along the ODE, and decodability"></svg>
+    <div class="legend"><span><i style="background:var(--flow)"></i>share of tokens already equal to the final token (along the real sampling path)</span><span><i style="background:var(--ref)"></i>how often the model's guess is the true token (if a real text is behind the noise)</span></div>
+  </div>
+</section>
+
+<section id="predictions">
+  <h2>Predictions vs results</h2>
+  <div class="card">
+    <p>These 12 hypotheses were written down <i>before</i> the main model was trained (H12 after seeing the pilot's text,
+    still before training; marked so).</p>
+    <div class="tw"><table>
+      <tr><th>#</th><th>Prediction</th><th>Result</th></tr>
+      <tr><td>H1</td><td>More steps help from 8 to 32, then flat</td><td><span class="yes">mostly holds</span> 167k → 127k → 121k</td></tr>
+      <tr><td>H2</td><td>Heun ≥ Euler at equal network calls</td><td>partly: yes from 16 calls, <span class="no">no</span> at 8</td></tr>
+      <tr><td>H3</td><td>Nearest-word decoding beats the projection head</td><td><span class="yes">holds</span> 3× better</td></tr>
+      <tr><td>H4</td><td>Samples end far from words; frequent words over-used; low loss ≠ good text</td><td>partly: far from words <span class="yes">yes</span>, low loss ≠ text <span class="yes">yes</span>, overuse <span class="no">no</span></td></tr>
+      <tr><td>H5</td><td>Flow clearly worse than AR-5.3M and MDLM-5.3M</td><td><span class="yes">holds, strongly</span> (+8.6 and +5.9 nats per token)</td></tr>
+      <tr><td>H6</td><td>Prompts kept exactly, but continuations less related</td><td><span class="yes">holds</span> (100% kept; relevance 0.45)</td></tr>
+      <tr><td>H7</td><td>Flow slower than AR, about as fast as MDLM</td><td><span class="no">refuted</span> faster than both</td></tr>
+      <tr><td>H8</td><td>The time input is needed</td><td><span class="no">refuted</span> for text (no effect)</td></tr>
+      <tr><td>H9</td><td>A token cross-entropy loss is the best change</td><td><span class="no">refuted</span> the only harmful one</td></tr>
+      <tr><td>H10</td><td>A 128-d space is worse</td><td><span class="no">refuted</span> slightly better</td></tr>
+      <tr><td>H11</td><td>32-token windows are not better</td><td><span class="no">refuted</span> better</td></tr>
+      <tr><td>H12</td><td>More training at small t helps (added after the pilot)</td><td><span class="no">not supported</span> no effect</td></tr>
+    </table></div>
+  </div>
+</section>
+
+<section id="p1">
+<div class="phase">
+  <div class="phase-head"><div class="phase-num">1</div><div><h3>Setup, data and baselines</h3><div class="sub">Phases 1–2</div></div></div>
+  <div class="part"><h4>What and why</h4>
+    <p>Same CPU and library versions as Projects 1–9 (Python 3.12, torch 2.14 CPU, 24 threads). Every file read from
+    other projects is hashed in <code>results/metrics/env.json</code>; those projects are never changed. The toy 2D
+    problem (above) was solved first to check the method before any text.</p>
+    <p><b>Data:</b> the first 64 tokens of each TinyStories story (1,772,187 training openings, 113M tokens), split by
+    story from Project 1's data. A fixed length is needed because the flow moves a fixed-shape cloud. 300 held-out
+    openings with more than 64 tokens are the comparison task; 100 others ("dev") are used for choices.</p>
+    <p><b>Baselines</b> (unchanged, from earlier projects): AR-5.3M (Project 2), MDLM-5.3M (Project 3), both trained on
+    49M tokens — the same as the flow model — and AR-13.9M / MDLM-13.9M as stronger references.</p>
+  </div>
+</div>
+</section>
+
+<section id="p3">
+<div class="phase">
+  <div class="phase-head"><div class="phase-num">3</div><div><h3>Choose a continuous representation</h3><div class="sub">frozen 384-d embeddings</div></div></div>
+  <div class="part"><h4>What and why</h4>
+    <p>We use Project 1's trained token embeddings, <b>frozen</b> (a learned space can shrink all words together and
+    make the loss look small while making words impossible to tell apart). They are shifted and scaled so the data has
+    mean 0 and spread 1, like the noise.</p>
+    <div class="tw"><table>
+      <tr><th>Check</th><th class="num">Result</th></tr>
+      <tr><td>every one of 8,192 tokens decodes back to itself (nearest)</td><td class="num">100%</td></tr>
+      <tr><td>…using the projection head instead</td><td class="num">77.1%</td></tr>
+      <tr><td>clean tokens + noise as large as the data still decode correctly</td><td class="num">99.991%</td></tr>
+      <tr><td>typical distance from a token to its nearest other token</td><td class="num">19.3</td></tr>
+    </table></div>
+  </div>
+  <div class="decide"><h4>Take-away</h4><p>Words are far apart in this space, so <b>rounding a point to a word is not the
+  hard part</b>. Any failure must come from where the model's points end up.</p></div>
+</div>
+</section>
+
+<section id="p4">
+<div class="phase">
+  <div class="phase-head"><div class="phase-num">4</div><div><h3>Path, velocity Transformer and loss</h3><div class="sub">Phases 4–6</div></div></div>
+  <div class="part"><h4>Path</h4><p>Straight line from noise to data: <code>x_t = (1 − t)·x0 + t·x1</code>, target velocity
+  <code>x1 − x0</code>. From any velocity guess v we can read the model's current guess of the clean text:
+  <code>x1_hat = x_t + (1 − t)·v</code>.</p></div>
+  <div class="part"><h4>Model</h4><p>A bidirectional Transformer (every position sees all others): 4 layers, 4 heads, width
+  256, <b>5,178,752 parameters</b>. The time t enters each layer through <b>adaLN-Zero</b>: it sets a scale, shift and
+  gate of each layer norm, and the gates start at zero so training starts stable. A flag marks positions that are
+  clean prompt tokens.</p></div>
+  <div class="part"><h4>Loss</h4><p>Mean squared error between predicted and true velocity on valid positions. Half of
+  each batch has a clean prompt of 8–24 tokens (not in the loss), so one model learns both free writing and
+  continuation. 15 unit tests check the path, the solvers, shapes, masks and the embeddings.</p></div>
+</div>
+</section>
+
+<section id="p7">
+<div class="phase">
+  <div class="phase-head"><div class="phase-num">7</div><div><h3>Train the flow model</h3><div class="sub">49.2M tokens, 32 minutes</div></div></div>
+  <div class="part"><h4>Learning-rate pilot</h4>
+    <div class="tw"><table><tr><th>peak lr</th><th class="num">3e-4</th><th class="num">1e-3</th><th class="num">3e-3</th><th class="num">6e-3</th><th class="num">1.2e-2</th></tr>
+    <tr><td>validation MSE (1,500 steps)</td><td class="num">0.949</td><td class="num">0.818</td><td class="num">0.744</td><td class="num"><b>0.733</b></td><td class="num">1.704 (unstable)</td></tr></table></div>
+  </div>
+  <div class="part"><h4>Main run</h4><p>6,000 steps × 128 × 64 tokens, 25,300 tokens/s, 1.8 GB memory, stable. Validation
+  MSE fell from 2.0 to <b>0.643</b>, still slowly improving. The model's guess of the true token from heavy noise
+  (t = 0.1) reached 30%; at t = 0.3 it is 92%.</p></div>
+  <div class="warn"><b>But:</b> a model trained 3× shorter (2,000 steps, MSE 0.696) writes text that is just as good —
+  or bad. A lower flow loss did not buy better text (Phase 14).</div>
+</div>
+</section>
+
+<section id="p8">
+<div class="phase">
+  <div class="phase-head"><div class="phase-num">8</div><div><h3>ODE sampler and decoding</h3><div class="sub">Phases 8–9</div></div></div>
+  <div class="part"><h4>Solvers</h4><p><b>Euler</b>: <code>x ← x + h·v(x, t)</code>, one network call per step.
+  <b>Heun</b>: take an Euler step, measure the velocity at the end too, and use the average of the two — two calls per
+  step but more accurate. Both are 30 lines of hand-written code; every network call (NFE) is counted.</p></div>
+  <div class="part"><h4>Decoding</h4><p>Each final point becomes the token with the nearest embedding, or the token with the
+  highest score from the <b>projection head</b> (the output layer of Project 1's model). Chosen on the 100 dev prompts
+  only: <b>Heun, 32 steps (64 calls), nearest</b>. Projection was 3.4× worse and produced 24–42% words that are not in
+  the vocabulary list.</p></div>
+</div>
+</section>
+
+<section id="p10">
+<div class="phase">
+  <div class="phase-head"><div class="phase-num">10</div><div><h3>Diagnose the continuous–discrete gap</h3><div class="sub">where exactly it fails</div></div></div>
+  <div class="part"><h4>Four measurements</h4>
+    <ul>
+      <li><b>Decision time:</b> along the real sampling path, 61% of final tokens are already fixed at t = 0.12 and 80% at
+      t = 0.25 (chart in "Why word salad?").</li>
+      <li><b>Decodability:</b> if a real text is behind the noise, the model's guess is right for 30% of tokens at
+      t = 0.1 and 80% at t = 0.2. Between t = 0.2 and 0.4 it is even <i>worse</i> than simply rescaling the noisy input.</li>
+      <li><b>End points:</b> generated points end 13.5 away from the nearest word (clean words: 0; words are 19 apart).
+      They stop in the empty space <b>between</b> words; more steps barely help (14.8 → 13.6).</li>
+      <li><b>Frequent words:</b> not over-used (60.6% of tokens among the top 100, real text 63.3%).</li>
+    </ul>
+  </div>
+  <div class="part"><h4>Noise or prompt?</h4>
+    <svg class="chart" id="piChart" viewBox="0 0 720 165" role="img" aria-label="Share of identical tokens under three conditions"></svg>
+    <p>Same starting noise, with and without the prompt: 74% of the 48 tokens are identical. With a <i>different</i>
+    prompt: 73%. Same prompt, different noise: 2%. <b>Where the noise starts decides the words.</b></p>
+  </div>
+  <div class="decide"><h4>Diagnosis</h4><p>The squared-error velocity points to the <b>average</b> of all texts that fit the
+  current noisy cloud. Early on, many texts fit, so each position drifts toward a blend of likely story words, mostly on
+  its own. By the time the picture is clear, most positions have already settled. The model learned <i>which words
+  appear in stories</i> but not <i>which word goes next to which</i>.</p></div>
+</div>
+</section>
+
+<section id="p11">
+<div class="phase">
+  <div class="phase-head"><div class="phase-num">11</div><div><h3>Prompt-conditioned continuation</h3><div class="sub">inpainting the prompt</div></div></div>
+  <div class="part"><h4>How</h4><p>The 16 prompt positions are held at their exact embeddings during the whole ODE; only the
+  other 48 positions move. The prompt comes out unchanged in <b>100%</b> of samples.</p></div>
+  <div class="part"><h4>Does the model use it?</h4><p>Little. Only 46% of continuations re-use a name the prompt
+  introduces ("a little bear named Benny"): AR-5.3M 78%, real 95%, random words 17%. Without any prompt (64 tokens from
+  noise) the flow model still writes word salad (perplexity 51,985; AR-5.3M from scratch: 13.4).</p></div>
+</div>
+</section>
+
+<section id="p12">
+<div class="phase">
+  <div class="phase-head"><div class="phase-num">12</div><div><h3>Compare ODE solvers and step counts</h3><div class="sub">quality, speed and network calls</div></div></div>
+  <div class="part">
+    <div class="seg" id="stepSeg"><button type="button" data-m="ppl" aria-pressed="true">quality</button><button type="button" data-m="lat">latency</button></div>
+    <svg class="chart" id="stepChart" viewBox="0 0 720 275" role="img" aria-label="Quality or latency against network calls"></svg>
+    <div class="legend"><span><i style="background:var(--flow)"></i>Euler</span><span><i style="background:var(--abl)"></i>Heun</span><span><i style="background:var(--proj)"></i>Euler, projection decoder</span></div>
+    <p>More steps help steadily but slowly: Euler 8 → 64 lowers perplexity from 167k to 121k, while latency grows exactly
+    in proportion (2.1 ms per network call). Heun is better than Euler at the same number of calls from 16 calls on,
+    but much worse at 8 (only 4 Heun steps). Even the best setting stays ≈370× worse than MDLM.</p>
+  </div>
+</div>
+</section>
+
+<section id="p13">
+<div class="phase">
+  <div class="phase-head"><div class="phase-num">13</div><div><h3>Compare with AR and diffusion LMs</h3><div class="sub">same size, same 49M tokens</div></div></div>
+  <div class="part"><h4>Quality</h4><p>Flow − MDLM-5.3M: <b>+5.93</b> nats per token [95% interval +5.86, +6.00]; flow −
+  AR-5.3M: +8.56. Flow − random frequent words: −0.28 (better, so its word <i>choice</i> carries some information).
+  Only 46% of the flow model's neighbouring token pairs ever occur in training text — the same as random words (46%);
+  real text 99%, AR-5.3M 98%, MDLM-5.3M 95%.</p></div>
+  <div class="part"><h4>Speed (CPU, batch 1, 48 new tokens)</h4>
+    <div class="tw"><table><tr><th>system</th><th class="num">network calls</th><th class="num">latency</th><th class="num">batch-64 tokens/s</th></tr>
+    <tr><td>flow, Euler 8</td><td class="num">8</td><td class="num">18 ms</td><td class="num">7,605</td></tr>
+    <tr><td>flow, Euler 32</td><td class="num">32</td><td class="num">68 ms</td><td class="num">2,080</td></tr>
+    <tr><td>AR-5.3M (KV cache)</td><td class="num">48</td><td class="num">96 ms</td><td class="num">4,965</td></tr>
+    <tr><td>MDLM-5.3M, 32 steps</td><td class="num">32</td><td class="num">143 ms</td><td class="num">490</td></tr></table></div>
+    <p>A flow step costs 2.1 ms, an MDLM step 4.5 ms: the flow model outputs 384 numbers per position instead of scores
+    for 8,192 words, and does not sample. <b>Speed is not the flow model's problem; quality is.</b></p>
+  </div>
+</div>
+</section>
+
+<section id="p14">
+<div class="phase">
+  <div class="phase-head"><div class="phase-num">14</div><div><h3>Ablations and error analysis</h3><div class="sub">one change at a time</div></div></div>
+  <div class="part"><h4>Ablations</h4>
+    <p>Each change trained for 2,000 steps against the reference (same settings, trained with 2 seeds). It counts
+    only if its interval excludes 0 <b>and</b> it lies outside the two reference seeds. Left of the line = better.</p>
+    <div class="legend"><span><i class="sq" style="background:var(--abl)"></i>counts by the rule</span><span><i class="sq" style="background:var(--ref)"></i>no effect beyond seed noise / seed variation</span></div>
+    <svg class="chart" id="ablChart" viewBox="0 0 720 285" role="img" aria-label="Ablation effects with intervals"></svg>
+    <p>Smaller space (128-d) and shorter windows (32 tokens) helped a little; the token cross-entropy loss hurt (it makes
+    each position commit even earlier, the very failure found in Phase 10); no time input and more small-t training did
+    nothing measurable. <b>All effects are tiny next to the ≈6-nat gap to MDLM.</b></p>
+  </div>
+  <div class="part"><h4>Failure types (80 blind-reviewed samples)</h4>
+    <div class="tw"><table><tr><th>system</th><th>most common issues (of 20)</th></tr>
+    <tr><td>flow</td><td>word salad 20, mixed-up names 19, broken words 8</td></tr>
+    <tr><td>MDLM-5.3M</td><td>grammar 20, repetition 9, names 8</td></tr>
+    <tr><td>AR-5.3M</td><td>contradiction 13, grammar 13, repetition 4</td></tr>
+    <tr><td>real</td><td>broken word 1, grammar 1</td></tr></table></div>
+    <p>The baselines fail at the level of the <i>story</i> (logic, repetition). The flow model fails at the level of
+    <i>word order</i>, and names from many stories appear side by side ("Mae Nick the Phil mom dinosaur").</p>
+  </div>
+</div>
+</section>
+
+<section id="p15">
+<div class="phase">
+  <div class="phase-head"><div class="phase-num">15</div><div><h3>Repository and final report</h3><div class="sub">Phases 15–16</div></div></div>
+  <div class="part"><p><code>flow/</code> holds the code (dataset, embeddings, path, model, training, ODE sampler,
+  generation, evaluation, diagnostics, comparison, benchmark, errors, plots); <code>configs/</code> the settings and
+  pre-registered hypotheses; <code>results/</code> every metric, every generated continuation, the review files and
+  the figures; <code>INSTRUCTIONS.md</code> all 16 phases with numbers. All training took about 2.5 CPU-hours;
+  everything reproduces in about 3.5 hours from the commands in the README.</p></div>
+</div>
+</section>
+
+<section id="lessons">
+  <h2>Lessons</h2>
+  <div class="card"><ul>
+    <li><b>A low loss is not good text.</b> The flow loss fell for the whole run, the text did not improve. Always
+    measure what you care about directly.</li>
+    <li><b>The hard part of continuous text generation is coordination, not rounding.</b> Words are far apart and easy
+    to round to; the model's points simply end up between words, chosen almost independently per position.</li>
+    <li><b>Masked diffusion has a built-in advantage:</b> once it commits a token, later steps see a real word. The
+    continuous flow only sees blurry blends until the end.</li>
+    <li><b>Surprises are results.</b> Four of the ablation predictions were wrong, and the flow model is faster than
+    expected. Writing predictions down first makes that visible.</li>
+    <li><b>What would plausibly help</b> (not tested): self-conditioning, many more steps where tokens get decided,
+    a learned lower-dimensional space with a decoder, much more compute, or discrete flow matching over token
+    probabilities.</li>
+  </ul></div>
+</section>
+
+<section id="glossary">
+  <h2>Glossary</h2>
+  <div class="tw"><table>
+    <tr><td><b>embedding</b></td><td>the list of numbers that represents a token (here 384)</td></tr>
+    <tr><td><b>flow matching</b></td><td>training a network to predict the velocity that moves noise to data along chosen paths</td></tr>
+    <tr><td><b>velocity field</b></td><td>for every point and time, the direction and speed to move</td></tr>
+    <tr><td><b>ODE / solver</b></td><td>the rule dx/dt = v(x, t), and the method that follows it in small steps (Euler, Heun)</td></tr>
+    <tr><td><b>NFE</b></td><td>number of function evaluations = how many times the network is called per sample</td></tr>
+    <tr><td><b>adaLN-Zero</b></td><td>feeding the time into each layer by setting the layer norm's scale, shift and gate (gates start at 0)</td></tr>
+    <tr><td><b>nearest-embedding decoding</b></td><td>turning a point into the token whose embedding is closest</td></tr>
+    <tr><td><b>projection head</b></td><td>the model's output layer: scores every token by a dot product and takes the best</td></tr>
+    <tr><td><b>scorer perplexity</b></td><td>how surprised an independent language model is by the text; lower = more natural</td></tr>
+    <tr><td><b>AR / MDLM</b></td><td>autoregressive (one token at a time) / masked diffusion LM (fills masks over steps)</td></tr>
+    <tr><td><b>ablation</b></td><td>an experiment that changes one ingredient</td></tr>
+    <tr><td><b>bootstrap interval</b></td><td>redraw the 300 prompts with replacement many times to see how much a difference could vary</td></tr>
+  </table></div>
+</section>
+</main>
+</div>
+<script>
+var DATA = {"samples": [{"prompt": "Lily and Tom are playing in the park. They see a big pile of waste", "real": " near the bin. It is dirty and smelly. Lily and Tom do not like it. \"Who put this waste here?\" Lily asks. \"It is bad for the park and the animals.\" \"I do not know,\" Tom says.", "ar5": ". They ask Mom and Dad if they don't have enough for dinner. Mom and Dad are not sad. They ask Lily for something to drink in the ball. They say they can have a snack that Mom and dad will be nice.", "mdlm5": ". The leaves and the sun was with a leaves sticks. The fish were blue fish and laughed and laughed, and wanted to Tom find a big yellow The rock. Ben. He asked Tom. \"Come, we need to come to the", "flow": ". yellow. different things It round Mae Nick the Phil mom dinosaur to. of not lo blinking swam the their She laughed so. towerœIt. SuzieœCome and, One with Ben Hollyunny.'s a a a Sadie lively big They drive", "flow8": ". yellow. unique things It round Sadie rare the Mar went dinosaur They. of not lo Lizzy crawled the their She pig so. SimonœIt. BaœCome and oil The with Ben Jamie Joy. on a was a spider lively very They sell"}, {"prompt": "Once upon a time, there was a little bear named Benny. Benny loved to", "real": " play in the forest with his friends. One day, Benny's mommy warned him that he should be careful while playing because the world can be a dangerous place. Benny didn't listen to his mommy and continued to play without any worries. Suddenly", "ar5": " climb things and find different leaves. One day, Benny decided to take a walk with his friends. Benny was very excited! Suddenly, his friends took him to a party. The party was full of toys and toys. Benny's mom said", "mdlm5": " play, especially run on his friends, one day, the beach with his friends and his friends. But, he met a park to play with his toys together. After his dad his big lot of the park. Timmy was happy started to", "flow": " day and. wanted. They He, if Benny. the very Benny Spring to some to. her pig was friends very Angel, was \" He One put So;, and Benny, Patty, kangaroo day One lovedœIt lovely, the a", "flow8": " girl and weird wanted. They He kangaroo if Benny. the very Benny Spring to bugs to. Penny lively had colorful very chubby to was \" He One placed So; weird and Benny, Patty, kangaroo day regular powerfulœIt modest, a a"}, {"prompt": "Once there was a yellow pistol. It was moving around everywhere. It was jumping", "real": " and twirling. Everywhere it went it caused a lot of excitement. One day the pistol saw something very strange. It was a big, round, yellow ball. It had started rolling and the pistol wanted to follow. So it ran behind the", "ar5": " and jumping around. Suddenly, the pistol suddenly broke! The strings flew out of the yard! The stuffed animal was so worried and wanted to help the pistol. He ran out of the yard and splashed around. Then the pistol moved closer,", "mdlm5": " around every day, the sun was green. He wanted to on a face and it. The bug did you. Then it was so very happy and happy and ran away. The bird said it ran to the flower of it!\" The bird", "flow": ". named was a Alex looked mom Gigi he He fancy tough named Nana. toys He, in the to He decided one day Milly the back prune Spring colorful it loved around He happy., L Paula mouse Grace was had It The he they", "flow8": ". Spring was it Alex looked mom Ruby he rare fancy pale lively Rock that toys He, was took to He unique stretch day Milly amazing back copper Spring lively it loved around boy very., L Paula mouse Grace felt gave It The he they"}, {"prompt": "Ben and Lily were playing on the beach. They liked to make sand castles and", "real": " dig holes. They saw the water go up and down. That was the tide. Sometimes the tide was low and they could see shells and crabs. Sometimes the tide was high and they had to move their sand castles. One day, they", "ar5": " towers. Sometimes they had fun, and being loved their snowman. Sometimes they brought another glove, in the sand.", "mdlm5": " many leaves, and like many are animals like things to also see the They are very white and flowers. \"It is a big, fish and asks them. \"Wow, pointing at it?\" asks. \"Wow, a boat!\" she", "flow": " and. Spring. Maisy toys the Birdy., to. and Phil Spring Olive and They Frank the saw They powerful June Suzie made Bonnie cars it day One set make the. sun Bo Jessie. play face long the big to and near dull", "flow8": " colorful. Spring. Spring toys the modest., to. and cloth for modest and They Frank the saw They powerful June Tilly made Spring cars it day One set make the They lively Bo modest. playœThat long the big to saw modest dull"}, {"prompt": "Once upon time there was a little girl named Grace. Grace was a very happy", "real": " child and always smiled. One day Grace did something wrong and made her mommy very angry. Grace's mommy yelled at her and said, \"Grace you shouldn't have done that, why did you?\" Grace felt very sad, she wanted", "ar5": " and loved to explore. One day, she decided to go on a walk and find a trail to climb on the trail of the trees. As the climb thing, she saw a piece of celery fluttering around. Grace began to pick the celery", "mdlm5": ". Every day before, she was very much Every night, she would she wanted to eat that day, she put her to take all of fun things. She couldn't want to what could try in the grass. Her room was too much", "flow": " aœYou, saw Inside fromane. Mel in to Mina modest mommy. very., day tries dull his lively was hungry with was perform to felt Kelly baseball she loved she fancy the. Bob became baby named When a coming Bra Spring a", "flow8": " a unique, Olive Inside fromane. Mel in Pat Mina modest mom. so. day day tries dull his lively was dull with was Spike to weird Spark hockey she loved she fancy the. Bob became delicate namedœWhy a fierce Bra Spring a"}, {"prompt": "Anna was very happy. Today was her birthday. She had a big cake with", "real": " candles and a pink dress. She wanted to play with her friends and open her presents. But her friends did not come. They had other things to do. They ignored Anna and her birthday. Anna was very sad. She did not understand", "ar5": " many colors and shapes and pictures. She liked to smell the yummy and make shapes. But then, the cake tasted very yummy. The cake made a lot of yummy cake. Anna was sad and bored. She did not want to share the", "mdlm5": " colors in her mom. Today, Anna, she made with many colors with her room and she was blue things. She was blue. One, she had fun, but she looked inside, and noticed it had a stick. Anna thought it", "flow": " Ella the and She day She he. the She pasta They the She her charming a. was He Zoom and magnet Gina too flower liked it around the unique Mina in,. gifts but also to and that in the saw mom pretend her by", "flow8": " Anna the likes She take her Z. the She pasta They the The flag charming colorful. lively He Zoom a JoyœThis too modest Phil it around the unique Mina in in bunny lively big also frog and that in the lively mom pretend her by"}], "decision": [[0.0, 0.011], [0.031, 0.102], [0.062, 0.263], [0.094, 0.462], [0.125, 0.613], [0.156, 0.698], [0.188, 0.748], [0.219, 0.774], [0.25, 0.795], [0.281, 0.81], [0.312, 0.823], [0.344, 0.836], [0.375, 0.847], [0.406, 0.858], [0.438, 0.866], [0.469, 0.873], [0.5, 0.883], [0.531, 0.888], [0.562, 0.898], [0.594, 0.905], [0.625, 0.917], [0.656, 0.924], [0.688, 0.934], [0.719, 0.942], [0.75, 0.955], [0.781, 0.964], [0.812, 0.975], [0.844, 0.984], [0.875, 0.99], [0.906, 0.994], [0.938, 0.997], [0.969, 0.999]], "decod": [[0.02, 0.055, 0.094, 0.004], [0.05, 0.112, 0.143, 0.021], [0.1, 0.302, 0.318, 0.157], [0.15, 0.591, 0.593, 0.514], [0.2, 0.799, 0.789, 0.858], [0.25, 0.883, 0.864, 0.978], [0.3, 0.924, 0.892, 0.998], [0.4, 0.981, 0.922, 1.0], [0.5, 0.999, 0.949, 1.0], [0.6, 1.0, 0.973, 1.0], [0.7, 1.0, 0.988, 1.0], [0.8, 1.0, 0.994, 1.0], [0.9, 1.0, 0.997, 1.0], [0.98, 1.0, 0.997, 1.0]]};
+(function () {
+  var btn = document.getElementById("themeBtn");
+  btn.addEventListener("click", function () {
+    var r = document.documentElement, cur = r.getAttribute("data-theme");
+    var dark = cur ? cur === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    r.setAttribute("data-theme", dark ? "light" : "dark");
+  });
+  var tip = document.getElementById("tip");
+  function showTip(e, html) { tip.innerHTML = html; tip.style.opacity = 1; var x = e.clientX + 14, y = e.clientY + 14;
+    if (x + 290 > window.innerWidth) x = e.clientX - 290; tip.style.left = x + "px"; tip.style.top = y + "px"; }
+  function hideTip() { tip.style.opacity = 0; }
+  var NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent) { var n = document.createElementNS(NS, tag); for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n); return n; }
+  function txt(parent, x, y, s, attrs) { var a = attrs || {}; a.x = x; a.y = y; var t = el("text", a, parent); t.textContent = s; return t; }
+  function hover(node, html) { node.addEventListener("mousemove", function (e) { showTip(e, html); }); node.addEventListener("mouseleave", hideTip); }
+  function fmt(v) { return v >= 100 ? Math.round(v).toLocaleString("en-US") : v.toFixed(1); }
+  function log10(v) { return Math.log(v) / Math.LN10; }
+
+  // ---------- toy 2D flow (exact marginal velocity of a Gaussian mixture) ----------
+  (function () {
+    var svg = document.getElementById("toySvg"), K = 8, R = 2.2, S = 0.12, N = 260, steps = 8, pts = [], dots = [], timer = null;
+    var M = []; for (var k = 0; k < K; k++) M.push([R * Math.cos(2 * Math.PI * k / K), R * Math.sin(2 * Math.PI * k / K)]);
+    function sx(v) { return 170 + v * 50; } function sy(v) { return 170 - v * 50; }
+    M.forEach(function (m) { el("circle", { cx: sx(m[0]), cy: sy(m[1]), r: 12, fill: "var(--good-soft)", stroke: "var(--good)", "stroke-width": 1 }, svg); });
+    function randn() { var u = 1 - Math.random(), v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+    function vel(x, t) {
+      var vt = (1 - t) * (1 - t) + t * t * S * S, w = [], mx = -1e9, i;
+      for (i = 0; i < K; i++) { var dx = x[0] - t * M[i][0], dy = x[1] - t * M[i][1]; w.push(-(dx * dx + dy * dy) / (2 * vt)); if (w[i] > mx) mx = w[i]; }
+      var z = 0; for (i = 0; i < K; i++) { w[i] = Math.exp(w[i] - mx); z += w[i]; }
+      var v = [0, 0];
+      for (i = 0; i < K; i++) {
+        var ex = x[0] - t * M[i][0], ey = x[1] - t * M[i][1];
+        var e1x = M[i][0] + t * S * S / vt * ex, e1y = M[i][1] + t * S * S / vt * ey;
+        var e0x = (1 - t) / vt * ex, e0y = (1 - t) / vt * ey;
+        v[0] += w[i] / z * (e1x - e0x); v[1] += w[i] / z * (e1y - e0y);
+      }
+      return v;
+    }
+    function reset() {
+      if (timer) { clearInterval(timer); timer = null; }
+      dots.forEach(function (d) { d.remove(); }); dots = []; pts = [];
+      for (var i = 0; i < N; i++) { var p = [randn(), randn()]; pts.push(p);
+        dots.push(el("circle", { cx: sx(p[0]), cy: sy(p[1]), r: 2.6, fill: "var(--flow)", opacity: 0.8 }, svg)); }
+      document.getElementById("toyNote").textContent = "t = 0.00 — all points are noise.";
+    }
+    function run() {
+      reset(); var k = 0, h = 1 / steps;
+      timer = setInterval(function () {
+        var t = k * h;
+        pts.forEach(function (p, i) { var v = vel(p, t); p[0] += h * v[0]; p[1] += h * v[1];
+          dots[i].setAttribute("cx", sx(p[0])); dots[i].setAttribute("cy", sy(p[1])); });
+        k++;
+        var near = pts.filter(function (p) { return M.some(function (m) { return Math.hypot(p[0] - m[0], p[1] - m[1]) < 3 * S; }); }).length;
+        document.getElementById("toyNote").textContent = "t = " + (k * h).toFixed(2) + " after " + k + " of " + steps +
+          " Euler steps — " + Math.round(100 * near / N) + "% of points sit on a blob.";
+        if (k >= steps) { clearInterval(timer); timer = null; }
+      }, Math.max(40, 900 / steps));
+    }
+    document.querySelectorAll("#toySeg button").forEach(function (b) { b.addEventListener("click", function () {
+      document.querySelectorAll("#toySeg button").forEach(function (c) { c.setAttribute("aria-pressed", c === b ? "true" : "false"); });
+      steps = +b.getAttribute("data-s"); reset(); }); });
+    document.getElementById("toyRun").addEventListener("click", run);
+    document.getElementById("toyReset").addEventListener("click", reset);
+    reset();
+  })();
+
+  // ---------- comparison bars (log x) ----------
+  (function () {
+    var svg = document.getElementById("cmpChart");
+    var rows = [["real continuation", 4.0, "--real"], ["AR-13.9M", 7.24, "--ar"], ["AR-5.3M", 22.7, "--ar"], ["MDLM-13.9M", 44.6, "--mdlm"],
+      ["MDLM-5.3M", 313.4, "--mdlm"], ["flow 5.2M (Heun 32)", 117771, "--flow"], ["real words, shuffled", 60756, "--ref"], ["random frequent words", 155007, "--ref"]];
+    var L = 170, Rr = 690, T = 10, H = 34;
+    function sx(v) { return L + (Rr - L) * (log10(v) - 0) / 6; }
+    [1, 10, 100, 1e3, 1e4, 1e5, 1e6].forEach(function (v) { el("line", { x1: sx(v), x2: sx(v), y1: T, y2: T + H * rows.length, class: "gridl" }, svg);
+      txt(svg, sx(v), T + H * rows.length + 16, v >= 1000 ? (v / 1000) + "k" : String(v), { "text-anchor": "middle" }); });
+    rows.forEach(function (r, i) {
+      var y = T + i * H + 7;
+      txt(svg, L - 8, y + 14, r[0], { "text-anchor": "end" });
+      var b = el("rect", { x: L, y: y, width: sx(r[1]) - L, height: 20, rx: 4, fill: "var(" + r[2] + ")" }, svg);
+      txt(svg, sx(r[1]) + 6, y + 14, fmt(r[1]));
+      hover(b, "<b>" + r[0] + "</b><br>scorer perplexity " + fmt(r[1]));
+    });
+    txt(svg, (L + Rr) / 2, T + H * rows.length + 34, "scorer perplexity (log scale, lower = better)", { "text-anchor": "middle" });
+  })();
+
+  // ---------- samples ----------
+  (function () {
+    var seg = document.getElementById("sampleSeg"), box = document.getElementById("sampleBox");
+    var names = [["real", "real continuation"], ["ar5", "AR-5.3M"], ["mdlm5", "MDLM-5.3M"], ["flow", "flow (Heun 32 steps)"], ["flow8", "flow (Euler 8 steps)"]];
+    function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+    function show(i) {
+      seg.querySelectorAll("button").forEach(function (b, j) { b.setAttribute("aria-pressed", i === j ? "true" : "false"); });
+      var s = DATA.samples[i];
+      box.innerHTML = names.map(function (n) { return '<div class="story"><span class="who">' + n[1] + '</span><b class="p">' + esc(s.prompt) + "</b>" + esc(s[n[0]]) + "</div>"; }).join("");
+    }
+    DATA.samples.forEach(function (s, i) { var b = document.createElement("button"); b.type = "button"; b.textContent = "prompt " + (i + 1);
+      b.addEventListener("click", function () { show(i); }); seg.appendChild(b); });
+    show(0);
+  })();
+
+  // ---------- joint vs independent ----------
+  (function () {
+    var P = [["the", "park"], ["her", "room"], ["a", "shop"]], n = 0, bad = 0;
+    function put(a, b, ok, mode) {
+      var w1 = document.getElementById("w1"), w2 = document.getElementById("w2");
+      w1.textContent = a; w2.textContent = b; w1.className = w2.className = "slot " + (ok ? "good" : "bad");
+      n++; if (!ok) bad++;
+      document.getElementById("jointNote").textContent = mode + ": \"" + a + " " + b + "\" — " + (ok ? "a real phrase." : "not a phrase anyone would write.") +
+        "  (" + bad + " of " + n + " draws broken so far)";
+    }
+    function pick() { return P[Math.floor(Math.random() * 3)]; }
+    document.getElementById("jointBtn").addEventListener("click", function () { var p = pick(); put(p[0], p[1], true, "whole phrase"); });
+    document.getElementById("indepBtn").addEventListener("click", function () { var a = pick(), b = pick(); put(a[0], b[1], a === b, "each position alone"); });
+  })();
+
+  // ---------- decision time + decodability ----------
+  (function () {
+    var svg = document.getElementById("decChart"), L = 60, Rr = 700, T = 12, B = 220;
+    function sx(t) { return L + (Rr - L) * t; } function sy(v) { return B - (B - T) * v; }
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (v) { el("line", { x1: L, x2: Rr, y1: sy(v), y2: sy(v), class: "gridl" }, svg); txt(svg, L - 8, sy(v) + 4, Math.round(v * 100) + "%", { "text-anchor": "end" }); });
+    [0, 0.2, 0.4, 0.6, 0.8, 1].forEach(function (t) { txt(svg, sx(t), B + 18, "t = " + t, { "text-anchor": "middle" }); });
+    function line(pts, col, dash) { el("path", { d: pts.map(function (p, i) { return (i ? "L" : "M") + sx(p[0]) + "," + sy(p[1]); }).join(""), fill: "none", stroke: "var(" + col + ")", "stroke-width": 2, "stroke-dasharray": dash || "" }, svg); }
+    var dec = DATA.decision, acc = DATA.decod.map(function (r) { return [r[0], r[1]]; });
+    line(dec, "--flow"); line(acc, "--ref", "5 4");
+    acc.forEach(function (p) { var c = el("circle", { cx: sx(p[0]), cy: sy(p[1]), r: 3.5, fill: "var(--ref)" }, svg);
+      var h = el("circle", { cx: sx(p[0]), cy: sy(p[1]), r: 10, fill: "transparent" }, svg); hover(h, "t = " + p[0] + "<br>model guesses the true token: " + Math.round(p[1] * 100) + "%"); });
+    dec.forEach(function (p, i) { if (i % 2) return; var h = el("circle", { cx: sx(p[0]), cy: sy(p[1]), r: 8, fill: "transparent" }, svg);
+      hover(h, "t = " + p[0].toFixed(2) + "<br>already equal to the final token: " + Math.round(p[1] * 100) + "%"); });
+    el("line", { x1: sx(0.2), x2: sx(0.2), y1: sy(0.75), y2: sy(0.3), stroke: "var(--muted)", "stroke-dasharray": "2 3" }, svg);
+    txt(svg, sx(0.2) + 8, sy(0.3), "t = 0.2: 75% of tokens already fixed", { fill: "var(--text)" });
+  })();
+
+  // ---------- prompt influence ----------
+  (function () {
+    var svg = document.getElementById("piChart"), rows = [["same noise, prompt vs no prompt", 0.740, "--flow"], ["same noise, prompt vs other prompt", 0.730, "--flow"], ["same prompt, different noise", 0.019, "--ref"]];
+    var L = 250, Rr = 560;
+    rows.forEach(function (r, i) { var y = 14 + i * 52;
+      txt(svg, L - 8, y + 18, r[0], { "text-anchor": "end" });
+      el("rect", { x: L, y: y, width: Rr - L, height: 26, rx: 4, fill: "var(--surface-2)" }, svg);
+      var b = el("rect", { x: L, y: y, width: Math.max(3, (Rr - L) * r[1]), height: 26, rx: 4, fill: "var(" + r[2] + ")" }, svg);
+      txt(svg, L + Math.max(3, (Rr - L) * r[1]) + 6, y + 18, Math.round(r[1] * 100) + "% identical tokens");
+      hover(b, r[0] + ": " + (r[1] * 100).toFixed(1) + "% of the 48 continuation tokens are the same"); });
+  })();
+
+  // ---------- steps chart ----------
+  (function () {
+    var svg = document.getElementById("stepChart");
+    var E = [[8, 166705, 17.8], [16, 139417, 33.4], [32, 126769, 67.7], [64, 121000, 134.2]];
+    var Hh = [[8, 280246, null], [16, 132617, null], [32, 119490, 67.9], [64, 115068, 133.2]];
+    var P = [[8, 542876], [16, 449082], [32, 380870], [64, 356375]];
+    var L = 80, Rr = 690, T = 12, B = 240;
+    function sx(n) { return L + (Rr - L) * (Math.log(n / 8) / Math.log(8)); }
+    function draw(m) {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+      var lo, hi, ticks; if (m === "ppl") { lo = 1e5; hi = 1e6; ticks = [1e5, 2e5, 5e5, 1e6]; } else { lo = 0; hi = 150; ticks = [0, 50, 100, 150]; }
+      function sy(v) { return m === "ppl" ? B - (B - T) * (log10(v) - log10(lo)) / (log10(hi) - log10(lo)) : B - (B - T) * (v - lo) / (hi - lo); }
+      ticks.forEach(function (v) { el("line", { x1: L, x2: Rr, y1: sy(v), y2: sy(v), class: "gridl" }, svg);
+        txt(svg, L - 8, sy(v) + 4, m === "ppl" ? (v / 1000) + "k" : v + " ms", { "text-anchor": "end" }); });
+      [8, 16, 32, 64].forEach(function (n) { txt(svg, sx(n), B + 24, n + " calls", { "text-anchor": "middle" }); });
+      var sets = m === "ppl" ? [[E, "--flow", "Euler, nearest"], [Hh, "--abl", "Heun, nearest"], [P, "--proj", "Euler, projection"]]
+                             : [[E.map(function (r) { return [r[0], r[2]]; }), "--flow", "Euler"], [Hh.filter(function (r) { return r[2]; }).map(function (r) { return [r[0], r[2]]; }), "--abl", "Heun"]];
+      sets.forEach(function (s) {
+        var pts = s[0].map(function (r) { return [r[0], m === "ppl" ? r[1] : r[1]]; });
+        el("path", { d: pts.map(function (p, i) { return (i ? "L" : "M") + sx(p[0]) + "," + sy(p[1]); }).join(""), fill: "none", stroke: "var(" + s[1] + ")", "stroke-width": 2 }, svg);
+        pts.forEach(function (p) { el("circle", { cx: sx(p[0]), cy: sy(p[1]), r: 4.5, fill: "var(" + s[1] + ")", stroke: "var(--surface)", "stroke-width": 2 }, svg);
+          var h = el("circle", { cx: sx(p[0]), cy: sy(p[1]), r: 11, fill: "transparent" }, svg);
+          hover(h, "<b>" + s[2] + "</b>, " + p[0] + " network calls<br>" + (m === "ppl" ? "scorer perplexity " + fmt(p[1]) : "latency " + p[1].toFixed(1) + " ms")); });
+      });
+      if (m === "lat") { el("line", { x1: L, x2: Rr, y1: sy(96.3), y2: sy(96.3), stroke: "var(--ar)", "stroke-dasharray": "5 4" }, svg); txt(svg, Rr - 4, sy(96.3) - 6, "AR-5.3M 96 ms", { "text-anchor": "end", fill: "var(--ar)" });
+        el("line", { x1: L, x2: Rr, y1: sy(142.6), y2: sy(142.6), stroke: "var(--mdlm)", "stroke-dasharray": "5 4" }, svg); txt(svg, L + 4, sy(142.6) - 6, "MDLM-5.3M (32 steps) 143 ms", { fill: "var(--mdlm)" }); }
+    }
+    document.querySelectorAll("#stepSeg button").forEach(function (b) { b.addEventListener("click", function () {
+      document.querySelectorAll("#stepSeg button").forEach(function (c) { c.setAttribute("aria-pressed", c === b ? "true" : "false"); }); draw(b.getAttribute("data-m")); }); });
+    draw("ppl");
+  })();
+
+  // ---------- ablations ----------
+  (function () {
+    var svg = document.getElementById("ablChart");
+    var A = [["reference, other seed", 0.119, 0.032, 0.205, null], ["no time input", -0.064, -0.160, 0.029, false], ["+ token cross-entropy", 0.466, 0.363, 0.569, true],
+      ["128-d PCA space", -0.163, -0.275, -0.052, true], ["more training at small t", 0.017, -0.067, 0.101, false], ["32-token windows (8+24 task)", -0.369, -0.535, -0.208, true]];
+    var L = 220, Rr = 690, T = 10, H = 38, X0 = -0.6, X1 = 0.6;
+    function sx(v) { return L + (Rr - L) * (v - X0) / (X1 - X0); }
+    [-0.6, -0.3, 0, 0.3, 0.6].forEach(function (v) { el("line", { x1: sx(v), x2: sx(v), y1: T, y2: T + H * A.length, class: "gridl" }, svg);
+      txt(svg, sx(v), T + H * A.length + 16, (v > 0 ? "+" : "") + v.toFixed(1), { "text-anchor": "middle" }); });
+    el("line", { x1: sx(0), x2: sx(0), y1: T, y2: T + H * A.length, stroke: "var(--text)", "stroke-width": 1 }, svg);
+    A.forEach(function (a, i) { var y = T + i * H + H / 2, col = a[4] ? "var(--abl)" : "var(--ref)";
+      txt(svg, L - 8, y + 4, a[0], { "text-anchor": "end" });
+      el("line", { x1: sx(a[2]), x2: sx(a[3]), y1: y, y2: y, stroke: col, "stroke-width": 2 }, svg);
+      el("circle", { cx: sx(a[1]), cy: y, r: 5, fill: col, stroke: "var(--surface)", "stroke-width": 2 }, svg);
+      var h = el("rect", { x: sx(a[2]) - 6, y: y - 12, width: sx(a[3]) - sx(a[2]) + 12, height: 24, fill: "transparent" }, svg);
+      hover(h, "<b>" + a[0] + "</b><br>NLL difference " + (a[1] > 0 ? "+" : "") + a[1].toFixed(3) + " [" + a[2].toFixed(3) + ", " + a[3].toFixed(3) + "]<br>" +
+        (a[4] === null ? "seed variation" : a[4] ? "counts by the rule" : "no effect beyond seed noise")); });
+    txt(svg, (L + Rr) / 2, T + H * A.length + 34, "scorer NLL difference vs reference (nats per token; < 0 = better)", { "text-anchor": "middle" });
+  })();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+{
+ "train_steps": 4000,
+ "train_seconds": 7.54896209994331,
+ "loss_first100": 5.088092942237854,
+ "loss_last100": 3.7745680451393127,
+ "noise_sw1": 1.7592294216156006,
+ "samplers": {
+  "euler1": {
+   "nfe": 1,
+   "sliced_w1": 2.4370830059051514,
+   "within_3sd_of_a_mode": 0.0
+  },
+  "euler2": {
+   "nfe": 2,
+   "sliced_w1": 0.7368651032447815,
+   "within_3sd_of_a_mode": 0.28325000405311584
+  },
+  "euler4": {
+   "nfe": 4,
+   "sliced_w1": 0.2720097303390503,
+   "within_3sd_of_a_mode": 0.7637500166893005
+  },
+  "euler8": {
+   "nfe": 8,
+   "sliced_w1": 0.17477792501449585,
+   "within_3sd_of_a_mode": 0.8787500262260437
+  },
+  "euler32": {
+   "nfe": 32,
+   "sliced_w1": 0.10982879251241684,
+   "within_3sd_of_a_mode": 0.9365000128746033
+  },
+  "euler128": {
+   "nfe": 128,
+   "sliced_w1": 0.09939493238925934,
+   "within_3sd_of_a_mode": 0.9462500214576721
+  },
+  "heun4": {
+   "nfe": 8,
+   "sliced_w1": 0.08729486167430878,
+   "within_3sd_of_a_mode": 0.909250020980835
+  },
+  "heun8": {
+   "nfe": 16,
+   "sliced_w1": 0.09699498116970062,
+   "within_3sd_of_a_mode": 0.9397500157356262
+  }
+ },
+ "data_vs_data_sw1": 0.11020969599485397
+}

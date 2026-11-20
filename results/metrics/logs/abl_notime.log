@@ -1,0 +1,5 @@
+[abl_notime] params 5,178,752  space p1small d=384  L=64  steps 2000  batch 128  lr 0.006  time none  aux_ce 0.0  t_power 1.0
+[abl_notime] step 500/2000 loss 0.9077 val mse 0.9231 prompt 0.9644 acc@.1 0.250 acc@.3 0.848 25200 tok/s
+[abl_notime] step 1000/2000 loss 0.7894 val mse 0.8379 prompt 0.8733 acc@.1 0.264 acc@.3 0.876 25445 tok/s
+[abl_notime] step 1500/2000 loss 0.8045 val mse 0.7747 prompt 0.8089 acc@.1 0.280 acc@.3 0.887 25358 tok/s
+[abl_notime] step 2000/2000 loss 0.7309 val mse 0.7545 prompt 0.7879 acc@.1 0.285 acc@.3 0.892 25276 tok/s

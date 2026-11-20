@@ -1,0 +1,13 @@
+[main] params 5,178,752  space p1small d=384  L=64  steps 6000  batch 128  lr 0.006  time adaln  aux_ce 0.0  t_power 1.0
+[main] step 500/6000 loss 0.8216 val mse 0.8424 prompt 0.8775 acc@.1 0.263 acc@.3 0.858 26317 tok/s
+[main] step 1000/6000 loss 0.7199 val mse 0.7771 prompt 0.8057 acc@.1 0.272 acc@.3 0.885 25868 tok/s
+[main] step 1500/6000 loss 0.7549 val mse 0.7335 prompt 0.7604 acc@.1 0.278 acc@.3 0.896 25660 tok/s
+[main] step 2000/6000 loss 0.6751 val mse 0.7071 prompt 0.7326 acc@.1 0.278 acc@.3 0.907 25488 tok/s
+[main] step 2500/6000 loss 0.6755 val mse 0.6967 prompt 0.7211 acc@.1 0.289 acc@.3 0.910 25264 tok/s
+[main] step 3000/6000 loss 0.6549 val mse 0.6795 prompt 0.7032 acc@.1 0.294 acc@.3 0.910 25220 tok/s
+[main] step 3500/6000 loss 0.6467 val mse 0.6700 prompt 0.6935 acc@.1 0.293 acc@.3 0.916 25196 tok/s
+[main] step 4000/6000 loss 0.6564 val mse 0.6612 prompt 0.6844 acc@.1 0.298 acc@.3 0.917 25264 tok/s
+[main] step 4500/6000 loss 0.6053 val mse 0.6530 prompt 0.6758 acc@.1 0.297 acc@.3 0.921 25328 tok/s
+[main] step 5000/6000 loss 0.5616 val mse 0.6479 prompt 0.6707 acc@.1 0.307 acc@.3 0.920 25401 tok/s
+[main] step 5500/6000 loss 0.6196 val mse 0.6442 prompt 0.6668 acc@.1 0.302 acc@.3 0.921 25350 tok/s
+[main] step 6000/6000 loss 0.6398 val mse 0.6434 prompt 0.6659 acc@.1 0.305 acc@.3 0.920 25295 tok/s

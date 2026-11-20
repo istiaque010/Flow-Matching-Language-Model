@@ -1,0 +1,51 @@
+{
+ "annotator": "AI (Claude subagent), blind to system; not human",
+ "systems": {
+  "flow": {
+   "n": 20,
+   "coherence_mean": 0.0,
+   "relevance_mean": 0.45,
+   "grammatical_share": 0.0,
+   "issues": {
+    "word_salad": 20,
+    "name_confusion": 19,
+    "broken_word": 8
+   }
+  },
+  "mdlm5": {
+   "n": 20,
+   "coherence_mean": 1.0,
+   "relevance_mean": 1.2,
+   "grammatical_share": 1.0,
+   "issues": {
+    "grammar": 20,
+    "repetition": 9,
+    "name_confusion": 8,
+    "contradiction": 4,
+    "off_topic": 4
+   }
+  },
+  "ar5": {
+   "n": 20,
+   "coherence_mean": 1.05,
+   "relevance_mean": 1.7,
+   "grammatical_share": 1.0,
+   "issues": {
+    "contradiction": 13,
+    "grammar": 13,
+    "repetition": 4,
+    "name_confusion": 2
+   }
+  },
+  "real": {
+   "n": 20,
+   "coherence_mean": 2.0,
+   "relevance_mean": 2.0,
+   "grammatical_share": 1.0,
+   "issues": {
+    "broken_word": 1,
+    "grammar": 1
+   }
+  }
+ }
+}

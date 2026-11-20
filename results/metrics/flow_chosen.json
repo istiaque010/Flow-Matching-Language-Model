@@ -1,0 +1,7 @@
+{
+ "solver": "heun",
+ "steps": 32,
+ "decoder": "nearest",
+ "rule": "lowest dev scorer perplexity, ties -> fewer NFE",
+ "dev_ppl": 104900.62930907945
+}

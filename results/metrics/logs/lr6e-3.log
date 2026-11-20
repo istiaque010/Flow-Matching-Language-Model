@@ -1,0 +1,4 @@
+[lr6e-3] params 5,178,752  space p1small d=384  L=64  steps 1500  batch 128  lr 0.006  time adaln  aux_ce 0.0
+[lr6e-3] step 500/1500 loss 0.8502 val mse 0.8739 prompt 0.9106 acc@.1 0.263 acc@.3 0.852 24497 tok/s
+[lr6e-3] step 1000/1500 loss 0.7132 val mse 0.7713 prompt 0.8034 acc@.1 0.285 acc@.3 0.880 25016 tok/s
+[lr6e-3] step 1500/1500 loss 0.7805 val mse 0.7335 prompt 0.7651 acc@.1 0.292 acc@.3 0.885 25049 tok/s
